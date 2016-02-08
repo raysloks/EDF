@@ -28,5 +28,5 @@ public class CameraFollowScript : MonoBehaviour {
             transform.Translate(view_offset, Space.World);
             transform.Translate(target.target / 4.0f, Space.World);
         }
-	}
+    }
 }

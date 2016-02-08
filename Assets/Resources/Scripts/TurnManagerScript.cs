@@ -9,15 +9,20 @@ public class TurnManagerScript : MonoBehaviour {
     Dictionary<float, ClickScript> order;
     Dictionary<float, ClickScript> new_order;
 
-    ClickScript current_turnholder;
+    public ClickScript current_turnholder;
 
 	// Use this for initialization
 	void Start () {
         order = new Dictionary<float, ClickScript>();
         new_order = new Dictionary<float, ClickScript>();
 
-        order.Add(0.0f, (Instantiate(Resources.Load("Prefabs/Character")) as GameObject).GetComponent<ClickScript>());
-        order.Add(0.5f, (Instantiate(Resources.Load("Prefabs/Character")) as GameObject).GetComponent<ClickScript>());
+        var go = Instantiate(Resources.Load("Prefabs/Character"), new Vector3(0.5f, 0.5f, 0.0f), Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f))) as GameObject;
+        var cs = go.GetComponent<ClickScript>();
+        order.Add(0.0f, cs);
+
+        go = Instantiate(Resources.Load("Prefabs/Character"), new Vector3(-0.5f, 0.5f, 0.0f), Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f))) as GameObject;
+        cs = go.GetComponent<ClickScript>();
+        order.Add(0.5f, cs);
     }
 	
 	// Update is called once per frame
@@ -25,15 +30,23 @@ public class TurnManagerScript : MonoBehaviour {
         if (current_turnholder == null)
         {
             var nume = order.GetEnumerator();
-            if (nume.MoveNext())
+            while (nume.MoveNext())
             {
-                var next = nume.Current;
-                current_turnholder = next.Value;
-                float time_to_advance = next.Key;
-                while (nume.MoveNext())
-                    new_order.Add(nume.Current.Key - time_to_advance, nume.Current.Value);
-                current_turnholder.my_turn = true;
-                current_turnholder.advance = 0.0f;
+                if (nume.Current.Value.Hold())
+                {
+
+                }
+                else
+                {
+                    var next = nume.Current;
+                    current_turnholder = next.Value;
+                    float time_to_advance = next.Key;
+                    while (nume.MoveNext())
+                        new_order.Add(nume.Current.Key - time_to_advance, nume.Current.Value);
+                    current_turnholder.my_turn = true;
+                    current_turnholder.advance = 0.0f;
+                    break;
+                }
             }
         }
         if (current_turnholder != null)
