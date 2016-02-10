@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class ClickScript : MonoBehaviour {
 
@@ -8,6 +8,8 @@ public class ClickScript : MonoBehaviour {
 
     public Vector2 target;
     float speed = 4.0f;
+
+    List<Vector2> path;
 
     float transition;
 
@@ -34,6 +36,19 @@ public class ClickScript : MonoBehaviour {
         if (hp != null)
             hold = hp.current <= 0;
         return hold;
+    }
+
+    public int Relation(ClickScript cs)
+    {
+        if (cs != null)
+        {
+            if (cs == this)
+            {
+                return -1;
+            }
+            return 1;
+        }
+        return 0;
     }
 
     // Update is called once per frame
@@ -86,18 +101,27 @@ public class ClickScript : MonoBehaviour {
                         }
                         else
                         {
-                            target = rh[rh_final].point;
+                            Vector2 ntarget = rh[rh_final].point;
 
-                            target.x = Mathf.Round(target.x - 0.5f) + 0.5f;
-                            target.y = Mathf.Round(target.y - 0.5f) + 0.5f;
+                            ntarget.x = Mathf.Round(ntarget.x - 0.5f) + 0.5f;
+                            ntarget.y = Mathf.Round(ntarget.y - 0.5f) + 0.5f;
 
-                            Vector2 dif = target - new Vector2(transform.position.x, transform.position.y);
-                            if (dif.magnitude > 5)
-                                target = transform.position;
-                            else
-                                my_turn = false;
+                            path = rh[rh_final].transform.GetComponent<TerrainScript>().GetPath(transform.position, ntarget);
+
+                            my_turn = false;
                         }
                     }
+                }
+            }
+
+            if (path != null)
+            {
+                if (path.Count > 0)
+                {
+                    if (path[path.Count - 1] - new Vector2(transform.position.x, transform.position.y) == new Vector2())
+                        path.RemoveAt(path.Count - 1);
+                    if (path.Count > 0)
+                        target = path[path.Count - 1];
                 }
             }
 
@@ -120,7 +144,6 @@ public class ClickScript : MonoBehaviour {
                 transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
             if (facing < 0)
                 transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-            facing = 0;
 
             float max_len = speed * Time.deltaTime;
             if (delta.magnitude > max_len)
