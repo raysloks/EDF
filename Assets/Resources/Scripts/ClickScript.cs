@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class ClickScript : MonoBehaviour {
 
     Animator anim;
-    HealthScript hp;
+    public HealthScript hp;
 
     public Vector2 target;
     float speed = 4.0f;
@@ -18,8 +18,16 @@ public class ClickScript : MonoBehaviour {
 
     public int facing;
 
-	// Use this for initialization
-	void Start()
+    public delegate void OnRollDelegate(ClickScript cs, RollData data);
+    public delegate void OnHitDelegate(ClickScript cs, HitData data);
+    public delegate void OnHealthChangedDelegate(ClickScript cs, int difference);
+
+    public OnRollDelegate onRoll;
+    public OnHitDelegate onHit;
+    public OnHealthChangedDelegate onHealthChanged;
+
+    // Use this for initialization
+    void Start()
     {
         GameObject obj = Instantiate(Resources.Load("Prefabs/Shadow")) as GameObject;
         ShadowScript ss = obj.GetComponent<ShadowScript>();
@@ -27,7 +35,6 @@ public class ClickScript : MonoBehaviour {
 
         target = transform.position;
         anim = GetComponentInChildren<Animator>();
-        hp = GetComponent<HealthScript>();
     }
 
     public bool Hold()
@@ -51,7 +58,52 @@ public class ClickScript : MonoBehaviour {
         return 0;
     }
 
-    // Update is called once per frame
+    public void OnHit(HitData data)
+    {
+        if (onHit != null)
+            onHit(this, data);
+
+        anim.SetTrigger("hit");
+
+        if (!Hold())
+        {
+            if (data.source.transform.position.x > transform.position.x)
+                facing = 1;
+            if (data.source.transform.position.x < transform.position.x)
+                facing = -1;
+        }
+
+        int total_damage = 0;
+        var nume = data.damage.GetEnumerator();
+        while (nume.MoveNext())
+        {
+            total_damage += nume.Current.Value;
+        }
+        hp.Damage(total_damage);
+        OnHealthChanged(-total_damage);
+        
+        GameObject obj = Instantiate(Resources.Load("Prefabs/Blood Spurt")) as GameObject;
+        SpriteRenderer rend = obj.GetComponent<SpriteRenderer>();
+        rend.color = new Color(0.278f, 0.071f, 0.071f);
+        obj.transform.position = transform.position;
+        obj.transform.localScale = new Vector3(-1.0f * facing, 1.0f, 1.0f);
+    }
+
+    public void OnHealthChanged(int difference)
+    {
+        if (onHealthChanged != null)
+            onHealthChanged(this, difference);
+
+        if (hp.current <= 0)
+        {
+            var anim = GetComponentInChildren<Animator>();
+            if (anim != null)
+            {
+                anim.SetTrigger("death");
+            }
+        }
+    }
+
     void Update()
     {
         bool stunned = false;
@@ -88,12 +140,12 @@ public class ClickScript : MonoBehaviour {
                                 facing = 1;
                             if (other.transform.position.x < transform.position.x)
                                 facing = -1;
-                            other.facing = -facing;
 
-                            HealthScript hs = other.GetComponent<HealthScript>();
-                            hs.Damage();
+                            HitData hd = new HitData(this, other);
+                            hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
 
-                            other.anim.SetTrigger("hit");
+                            other.OnHit(hd);
+
                             anim.SetTrigger("attack");
                             transition = 0.5f;
 
@@ -106,7 +158,9 @@ public class ClickScript : MonoBehaviour {
                             ntarget.x = Mathf.Round(ntarget.x - 0.5f) + 0.5f;
                             ntarget.y = Mathf.Round(ntarget.y - 0.5f) + 0.5f;
 
-                            path = rh[rh_final].transform.GetComponent<TerrainScript>().GetPath(transform.position, ntarget);
+                            TerrainScript ts = rh[rh_final].transform.GetComponent<TerrainScript>();
+                            if (ts != null)
+                                path = ts.GetPath(transform.position, ntarget);
 
                             my_turn = false;
                         }

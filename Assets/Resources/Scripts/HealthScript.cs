@@ -16,15 +16,9 @@ public class HealthScript : MonoBehaviour {
 	    
 	}
 
-    public void Damage () {
-        current -= 1;
-        if (current <= 0)
-        {
-            var anim = GetComponentInChildren<Animator>();
-            if (anim != null)
-            {
-                anim.SetTrigger("death");
-            }
-        }
+    public void Damage(int damage) {
+        current -= damage;
+        if (current > max)
+            current = max;
     }
 }
