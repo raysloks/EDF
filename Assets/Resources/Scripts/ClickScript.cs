@@ -21,10 +21,12 @@ public class ClickScript : MonoBehaviour {
     public delegate void OnRollDelegate(ClickScript cs, RollData data);
     public delegate void OnHitDelegate(ClickScript cs, HitData data);
     public delegate void OnHealthChangedDelegate(ClickScript cs, int difference);
+    public delegate void OnTurnEndDelegate(ClickScript cs, TurnData data);
 
     public OnRollDelegate onRoll;
     public OnHitDelegate onHit;
     public OnHealthChangedDelegate onHealthChanged;
+    public OnTurnEndDelegate onTurnEnd;
 
     // Use this for initialization
     void Start()

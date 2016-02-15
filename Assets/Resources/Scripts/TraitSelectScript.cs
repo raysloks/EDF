@@ -21,15 +21,15 @@ public class TraitSelectScript : MonoBehaviour {
             if (GUI.Button(new Rect(30.0f, y, 200.0f, 20.0f), new GUIContent(nume.Current.Value.GetName(), nume.Current.Value.GetDescription())))
             {
                 if (tm != null)
-                {
                     if (tm.current_turnholder != null)
-                    {
                         nume.Current.Value.Instantiate().Attach(tm.current_turnholder);
-                    }
-                }
             }
             y += 30.0f;
         }
         GUI.Label(new Rect(260.0f, 20.0f, 200.0f, 100.0f), GUI.tooltip);
+
+        if (tm != null)
+            if (tm.current_turnholder != null)
+                GUI.Label(new Rect(500.0f, 20.0f, 100.0f, 20.0f), tm.current_turnholder.hp.current.ToString() + " / " + tm.current_turnholder.hp.max.ToString());
     }
 }
