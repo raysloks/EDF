@@ -12,6 +12,7 @@ public class TraitList
         AddTrait(new ExemplarTraitFactory());
         AddTrait(new PerseveranceTraitFactory());
         AddTrait(new AltEnduranceTraitFactory());
+        AddTrait(new EnduranceTraitFactory());
     }
 
     public void AddTrait(TraitFactory factory)
