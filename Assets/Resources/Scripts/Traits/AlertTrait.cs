@@ -14,9 +14,6 @@ public class AlertTrait : Trait
 
 	}
 	
-
-	}
-	
 	public override string GetDescription()
 	{
 		return "This unit have a 2/3 chance not to be surprised.";
