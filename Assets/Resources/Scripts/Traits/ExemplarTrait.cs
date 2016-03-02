@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-using UnityEngine;
-
+[Serializable]
 public class ExemplarTrait : Trait
 {
     public override void Attach(ClickScript cs)
     {
-        cs.onRoll += OnRoll;
+        cs.onRoll[-100.0f] += OnRoll;
     }
 
     public override void Detach(ClickScript cs)
     {
-        cs.onRoll -= OnRoll;
+        cs.onRoll[-100.0f] -= OnRoll;
     }
 
     void OnRoll(ClickScript cs, RollData data)

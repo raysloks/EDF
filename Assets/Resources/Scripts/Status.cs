@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
+[Serializable]
 public class Status
 {
-    public ClickScript owner;
-
     public virtual void Attach(ClickScript cs) { }
     public virtual void Detach(ClickScript cs) { }
 

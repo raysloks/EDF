@@ -1,22 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-using UnityEngine;
-
+[Serializable]
 public class AltEnduranceTrait : Trait
 {
     public override void Attach(ClickScript cs)
     {
-        cs.onTurnEnd += OnTurnEnd;
-        cs.onRoll += OnRoll;
+        cs.onTurnEnd[0.0f] += OnTurnEnd;
+        cs.onRoll[100.0f] += OnRoll;
     }
 
     public override void Detach(ClickScript cs)
     {
-        cs.onRoll -= OnRoll;
-        cs.onTurnEnd -= OnTurnEnd;
+        cs.onRoll[100.0f] -= OnRoll;
+        cs.onTurnEnd[0.0f] -= OnTurnEnd;
     }
 
     void OnTurnEnd(ClickScript cs, TurnData data)

@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 public class ClickScript : MonoBehaviour {
 
@@ -18,25 +20,80 @@ public class ClickScript : MonoBehaviour {
 
     public int facing;
 
+    public List<Status> status;
+
     public delegate void OnRollDelegate(ClickScript cs, RollData data);
     public delegate void OnHitDelegate(ClickScript cs, HitData data);
     public delegate void OnHealthChangedDelegate(ClickScript cs, int difference);
     public delegate void OnTurnEndDelegate(ClickScript cs, TurnData data);
+    public delegate void OnRecalculateStats(ClickScript cs, CharacterData data);
 
-    public OnRollDelegate onRoll;
-    public OnHitDelegate onHit;
-    public OnHealthChangedDelegate onHealthChanged;
-    public OnTurnEndDelegate onTurnEnd;
+    public class DelegateDictionary<TValue> : Dictionary<float, TValue>
+    {
+        public new TValue this[float key]
+        {
+            get
+            {
+                TValue value;
+                TryGetValue(key, out value);
+                return value;
+            }
+            set
+            {
+                base[key] = value;
+            }
+        }
+    }
+
+    public DelegateDictionary<OnRollDelegate> onRoll;
+    public DelegateDictionary<OnHitDelegate> onHit;
+    public DelegateDictionary<OnHealthChangedDelegate> onHealthChanged;
+    public DelegateDictionary<OnTurnEndDelegate> onTurnEnd;
+    public DelegateDictionary<OnRecalculateStats> onRecalculateStats;
 
     // Use this for initialization
     void Start()
     {
+        onRoll = new DelegateDictionary<OnRollDelegate>();
+        onHit = new DelegateDictionary<OnHitDelegate>();
+        onHealthChanged = new DelegateDictionary<OnHealthChangedDelegate>();
+        onTurnEnd = new DelegateDictionary<OnTurnEndDelegate>();
+        onRecalculateStats = new DelegateDictionary<OnRecalculateStats>();
+
+        status = new List<Status>();
+
         GameObject obj = Instantiate(Resources.Load("Prefabs/Shadow")) as GameObject;
         ShadowScript ss = obj.GetComponent<ShadowScript>();
         ss.follow = transform;
 
         target = transform.position;
         anim = GetComponentInChildren<Animator>();
+    }
+
+    public void Save(Stream stream)
+    {
+        BinaryFormatter bf = new BinaryFormatter();
+
+        bf.Serialize(stream, status.Count);
+
+        var nume = status.GetEnumerator();
+        while (nume.MoveNext())
+        {
+            bf.Serialize(stream, nume.Current);
+        }
+    }
+
+    public void Load(Stream stream)
+    {
+        BinaryFormatter bf = new BinaryFormatter();
+
+        int count = (int)bf.Deserialize(stream);
+        for (int i=0;i<count;++i)
+        {
+            Status nstatus = (Status)bf.Deserialize(stream);
+            nstatus.Attach(this);
+            status.Add(nstatus);
+        }
     }
 
     public bool Hold()
@@ -62,9 +119,17 @@ public class ClickScript : MonoBehaviour {
 
     public void OnHit(HitData data)
     {
-        if (onHit != null)
-            onHit(this, data);
-
+        {
+            List<float> empty = new List<float>();
+            var nume = onHit.GetEnumerator();
+            while (nume.MoveNext())
+                if (nume.Current.Value != null)
+                    nume.Current.Value(this, data);
+            var nume2 = empty.GetEnumerator();
+            while (nume.MoveNext())
+                onHit.Remove(nume2.Current);
+        }
+        
         anim.SetTrigger("hit");
 
         if (!Hold())
@@ -75,15 +140,17 @@ public class ClickScript : MonoBehaviour {
                 facing = -1;
         }
 
-        int total_damage = 0;
-        var nume = data.damage.GetEnumerator();
-        while (nume.MoveNext())
         {
-            total_damage += nume.Current.Value;
+            int total_damage = 0;
+            var nume = data.damage.GetEnumerator();
+            while (nume.MoveNext())
+            {
+                total_damage += nume.Current.Value;
+            }
+            hp.Damage(total_damage);
+            OnHealthChanged(-total_damage);
         }
-        hp.Damage(total_damage);
-        OnHealthChanged(-total_damage);
-        
+
         GameObject obj = Instantiate(Resources.Load("Prefabs/Blood Spurt")) as GameObject;
         SpriteRenderer rend = obj.GetComponent<SpriteRenderer>();
         rend.color = new Color(0.278f, 0.071f, 0.071f);
@@ -93,8 +160,16 @@ public class ClickScript : MonoBehaviour {
 
     public void OnHealthChanged(int difference)
     {
-        if (onHealthChanged != null)
-            onHealthChanged(this, difference);
+        {
+            List<float> empty = new List<float>();
+            var nume = onHealthChanged.GetEnumerator();
+            while (nume.MoveNext())
+                if (nume.Current.Value != null)
+                    nume.Current.Value(this, difference);
+            var nume2 = empty.GetEnumerator();
+            while (nume.MoveNext())
+                onHealthChanged.Remove(nume2.Current);
+        }
 
         if (hp.current <= 0)
         {
@@ -103,6 +178,20 @@ public class ClickScript : MonoBehaviour {
             {
                 anim.SetTrigger("death");
             }
+        }
+    }
+
+    public void OnTurnEnd(TurnData data)
+    {
+        {
+            List<float> empty = new List<float>();
+            var nume = onTurnEnd.GetEnumerator();
+            while (nume.MoveNext())
+                if (nume.Current.Value != null)
+                    nume.Current.Value(this, data);
+            var nume2 = empty.GetEnumerator();
+            while (nume.MoveNext())
+                onTurnEnd.Remove(nume2.Current);
         }
     }
 

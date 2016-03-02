@@ -1,25 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-using UnityEngine;
-
+[Serializable]
 public class EnduranceTrait : Trait
 {
-	public override void Attach(ClickScript cs)
-	{
-		cs.onTurnEnd += OnTurnEnd;
-		cs.onRoll += OnRoll;
-	}
-	
-	public override void Detach(ClickScript cs)
-	{
-		cs.onRoll -= OnRoll;
-		cs.onTurnEnd -= OnTurnEnd;
-	}
-	
-	void OnTurnEnd(ClickScript cs, TurnData data)
+    public override void Attach(ClickScript cs)
+    {
+        cs.onTurnEnd[0.0f] += OnTurnEnd;
+        cs.onRoll[100.0f] += OnRoll;
+    }
+
+    public override void Detach(ClickScript cs)
+    {
+        cs.onRoll[100.0f] -= OnRoll;
+        cs.onTurnEnd[0.0f] -= OnTurnEnd;
+    }
+
+    void OnTurnEnd(ClickScript cs, TurnData data)
 	{
 		if (data.type == TurnType.dungeon) 
 		{
@@ -49,7 +46,7 @@ public class EnduranceTrait : Trait
 	
 	public override string GetDescription()
 	{
-		return "This unit regenerates 1 hp per dungeon round if the unit is below 3 hp. Penalty from starving is reduced by 2";
+		return "This unit regenerates 1 hp per dungeon round if the unit is below 3 hp. Penalty from starving is reduced by 2.";
 	}
 	
 	public override string GetName()

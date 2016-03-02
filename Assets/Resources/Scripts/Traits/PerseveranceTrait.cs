@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-using UnityEngine;
-
+[Serializable]
 public class PerseveranceTrait : Trait
 {
     public override void Attach(ClickScript cs)
     {
-        cs.onHealthChanged += OnHealthChanged;
+        cs.onHealthChanged[-100.0f] += OnHealthChanged;
     }
 
     public override void Detach(ClickScript cs)
     {
-        cs.onHealthChanged -= OnHealthChanged;
+        cs.onHealthChanged[-100.0f] -= OnHealthChanged;
     }
 
     void OnHealthChanged(ClickScript cs, int difference)
