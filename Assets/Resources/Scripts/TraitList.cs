@@ -7,10 +7,18 @@ public class TraitList
     public TraitList()
     {
         traits = new Dictionary<string, TraitFactory>();
-
+        
+        AddTrait(new BrandedTraitFactory());
+        AddTrait(new CurseOfAgonyTraitFactory());
+        AddTrait(new DarkvisionTraitFactory());
+        AddTrait(new DeftTravellerTraitFactory());
+        AddTrait(new DevilWorshipperTraitFactory());
+        AddTrait(new DevoutTraitFactory());
+        AddTrait(new EldritchHeritageTraitFactory());
+        AddTrait(new EldritchScholarTraitFactory());
+        AddTrait(new EnduranceTraitFactory());
         AddTrait(new ExemplarTraitFactory());
         AddTrait(new PerseveranceTraitFactory());
-        AddTrait(new EnduranceTraitFactory());
     }
 
     public void AddTrait(TraitFactory factory)
