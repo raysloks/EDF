@@ -2,7 +2,7 @@ using System;
 
 public class RandomManager
 {
-	public static Random random = new Random(DateTime.Now);
+	public static Random random = new Random();
 
 	public static int d6()
 	{
