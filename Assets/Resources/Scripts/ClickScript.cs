@@ -8,6 +8,8 @@ public class ClickScript : MonoBehaviour {
     Animator anim;
     public HealthScript hp;
 
+    public Inventory inventory;
+
     public Vector2 target;
     float speed = 4.0f;
 
@@ -26,7 +28,9 @@ public class ClickScript : MonoBehaviour {
     public delegate void OnHitDelegate(ClickScript cs, HitData data);
     public delegate void OnHealthChangedDelegate(ClickScript cs, int difference);
     public delegate void OnTurnEndDelegate(ClickScript cs, TurnData data);
-    public delegate void OnRecalculateStats(ClickScript cs, CharacterData data);
+    public delegate void OnRecalculateStatsDelegate(ClickScript cs, CharacterData data);
+    public delegate void OnGetTypeDelegate(ClickScript cs, TypeData data);
+    public delegate void OnRolledAgainstDelegate(ClickScript cs, RollData data);
 
     public class DelegateDictionary<TValue> : Dictionary<float, TValue>
     {
@@ -49,7 +53,9 @@ public class ClickScript : MonoBehaviour {
     public DelegateDictionary<OnHitDelegate> onHit;
     public DelegateDictionary<OnHealthChangedDelegate> onHealthChanged;
     public DelegateDictionary<OnTurnEndDelegate> onTurnEnd;
-    public DelegateDictionary<OnRecalculateStats> onRecalculateStats;
+    public DelegateDictionary<OnRecalculateStatsDelegate> onRecalculateStats;
+    public DelegateDictionary<OnGetTypeDelegate> onGetType;
+    public DelegateDictionary<OnRolledAgainstDelegate> onRolledAgainst;
 
     // Use this for initialization
     void Start()
@@ -58,7 +64,9 @@ public class ClickScript : MonoBehaviour {
         onHit = new DelegateDictionary<OnHitDelegate>();
         onHealthChanged = new DelegateDictionary<OnHealthChangedDelegate>();
         onTurnEnd = new DelegateDictionary<OnTurnEndDelegate>();
-        onRecalculateStats = new DelegateDictionary<OnRecalculateStats>();
+        onRecalculateStats = new DelegateDictionary<OnRecalculateStatsDelegate>();
+        onGetType = new DelegateDictionary<OnGetTypeDelegate>();
+        onRolledAgainst = new DelegateDictionary<OnRolledAgainstDelegate>();
 
         status = new List<Status>();
 
@@ -76,6 +84,8 @@ public class ClickScript : MonoBehaviour {
 
         bf.Serialize(stream, hp.current);
 
+        bf.Serialize(stream, inventory);
+
         bf.Serialize(stream, status.Count);
 
         var nume = status.GetEnumerator();
@@ -90,6 +100,8 @@ public class ClickScript : MonoBehaviour {
         BinaryFormatter bf = new BinaryFormatter();
 
         hp.current = (int)bf.Deserialize(stream);
+
+        inventory = (Inventory)bf.Deserialize(stream);
 
         int count = (int)bf.Deserialize(stream);
         for (int i=0;i<count;++i)
@@ -129,6 +141,8 @@ public class ClickScript : MonoBehaviour {
             while (nume.MoveNext())
                 if (nume.Current.Value != null)
                     nume.Current.Value(this, data);
+                else
+                    empty.Add(nume.Current.Key);
             var nume2 = empty.GetEnumerator();
             while (nume.MoveNext())
                 onHit.Remove(nume2.Current);
@@ -170,6 +184,8 @@ public class ClickScript : MonoBehaviour {
             while (nume.MoveNext())
                 if (nume.Current.Value != null)
                     nume.Current.Value(this, difference);
+                else
+                    empty.Add(nume.Current.Key);
             var nume2 = empty.GetEnumerator();
             while (nume.MoveNext())
                 onHealthChanged.Remove(nume2.Current);
@@ -193,10 +209,28 @@ public class ClickScript : MonoBehaviour {
             while (nume.MoveNext())
                 if (nume.Current.Value != null)
                     nume.Current.Value(this, data);
+                else
+                    empty.Add(nume.Current.Key);
             var nume2 = empty.GetEnumerator();
             while (nume.MoveNext())
                 onTurnEnd.Remove(nume2.Current);
         }
+    }
+
+    public List<string> GetTypes()
+    {
+        TypeData td = new TypeData();
+            List<float> empty = new List<float>();
+            var nume = onHit.GetEnumerator();
+            while (nume.MoveNext())
+                if (nume.Current.Value != null)
+                    nume.Current.Value(this, data);
+                else
+                    empty.Add(nume.Current.Key);
+            var nume2 = empty.GetEnumerator();
+            while (nume.MoveNext())
+                onHit.Remove(nume2.Current);
+        return td.type;
     }
 
     void Update()
