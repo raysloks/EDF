@@ -9,6 +9,8 @@ public class SaveManager
         FileStream file = File.Open(Application.persistentDataPath + "/save.dat", FileMode.Create);
 
         tm.Save(file);
+
+        file.Close();
     }
 
     public void Load(TurnManagerScript tm)
@@ -18,6 +20,8 @@ public class SaveManager
             FileStream file = File.Open(Application.persistentDataPath + "/save.dat", FileMode.Open);
 
             tm.Load(file);
+
+            file.Close();
         }
     }
 }
