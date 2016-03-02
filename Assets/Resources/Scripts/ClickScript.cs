@@ -74,6 +74,8 @@ public class ClickScript : MonoBehaviour {
     {
         BinaryFormatter bf = new BinaryFormatter();
 
+        bf.Serialize(stream, hp.current);
+
         bf.Serialize(stream, status.Count);
 
         var nume = status.GetEnumerator();
@@ -86,6 +88,8 @@ public class ClickScript : MonoBehaviour {
     public void Load(Stream stream)
     {
         BinaryFormatter bf = new BinaryFormatter();
+
+        hp.current = (int)bf.Deserialize(stream);
 
         int count = (int)bf.Deserialize(stream);
         for (int i=0;i<count;++i)

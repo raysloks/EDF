@@ -52,7 +52,10 @@ public class TurnManagerScript : MonoBehaviour {
             var nume2 = nume.Current.Value.GetEnumerator();
             while (nume2.MoveNext())
             {
-                bf.Serialize(stream, nume2.Current.transform.position);
+                Vector3 position = nume2.Current.transform.position;
+                bf.Serialize(stream, position.x);
+                bf.Serialize(stream, position.y);
+                bf.Serialize(stream, position.z);
                 nume2.Current.Save(stream);
             }
         }
@@ -72,7 +75,7 @@ public class TurnManagerScript : MonoBehaviour {
             int count2 = (int)bf.Deserialize(stream);
             for (int j=0;j<count2;++j)
             {
-                Vector3 position = (Vector3)bf.Deserialize(stream);
+                Vector3 position = new Vector3((float)bf.Deserialize(stream), (float)bf.Deserialize(stream), (float)bf.Deserialize(stream));
                 var go = Instantiate(Resources.Load("Prefabs/Character"), position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f))) as GameObject;
                 var cs = go.GetComponent<ClickScript>();
                 cs.Load(stream);
