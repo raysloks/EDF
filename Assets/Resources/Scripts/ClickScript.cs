@@ -30,7 +30,6 @@ public class ClickScript : MonoBehaviour {
     public delegate void OnTurnEndDelegate(ClickScript cs, TurnData data);
     public delegate void OnRecalculateStatsDelegate(ClickScript cs, CharacterData data);
     public delegate void OnGetTypeDelegate(ClickScript cs, TypeData data);
-    public delegate void OnRolledAgainstDelegate(ClickScript cs, RollData data);
 
     public class DelegateDictionary<TValue> : Dictionary<float, TValue>
     {
@@ -55,7 +54,6 @@ public class ClickScript : MonoBehaviour {
     public DelegateDictionary<OnTurnEndDelegate> onTurnEnd;
     public DelegateDictionary<OnRecalculateStatsDelegate> onRecalculateStats;
     public DelegateDictionary<OnGetTypeDelegate> onGetType;
-    public DelegateDictionary<OnRolledAgainstDelegate> onRolledAgainst;
 
     // Use this for initialization
     void Start()
@@ -66,7 +64,6 @@ public class ClickScript : MonoBehaviour {
         onTurnEnd = new DelegateDictionary<OnTurnEndDelegate>();
         onRecalculateStats = new DelegateDictionary<OnRecalculateStatsDelegate>();
         onGetType = new DelegateDictionary<OnGetTypeDelegate>();
-        onRolledAgainst = new DelegateDictionary<OnRolledAgainstDelegate>();
 
         status = new List<Status>();
 
@@ -219,9 +216,9 @@ public class ClickScript : MonoBehaviour {
 
     public List<string> GetTypes()
     {
-        TypeData td = new TypeData();
+        TypeData data = new TypeData();
             List<float> empty = new List<float>();
-            var nume = onHit.GetEnumerator();
+            var nume = onGetType.GetEnumerator();
             while (nume.MoveNext())
                 if (nume.Current.Value != null)
                     nume.Current.Value(this, data);
@@ -230,7 +227,7 @@ public class ClickScript : MonoBehaviour {
             var nume2 = empty.GetEnumerator();
             while (nume.MoveNext())
                 onHit.Remove(nume2.Current);
-        return td.type;
+        return data.type;
     }
 
     void Update()
