@@ -55,8 +55,7 @@ public class ClickScript : MonoBehaviour {
     public DelegateDictionary<OnRecalculateStatsDelegate> onRecalculateStats;
     public DelegateDictionary<OnGetTypeDelegate> onGetType;
 
-    // Use this for initialization
-    void Start()
+    public void Init()
     {
         onRoll = new DelegateDictionary<OnRollDelegate>();
         onHit = new DelegateDictionary<OnHitDelegate>();
@@ -67,12 +66,17 @@ public class ClickScript : MonoBehaviour {
 
         status = new List<Status>();
 
+        inventory = new Inventory();
+
         GameObject obj = Instantiate(Resources.Load("Prefabs/Shadow")) as GameObject;
         ShadowScript ss = obj.GetComponent<ShadowScript>();
         ss.follow = transform;
 
         target = transform.position;
         anim = GetComponentInChildren<Animator>();
+
+        hp.max = 4;
+        hp.current = 4;
     }
 
     public void Save(Stream stream)
@@ -81,7 +85,9 @@ public class ClickScript : MonoBehaviour {
 
         bf.Serialize(stream, hp.current);
 
-        bf.Serialize(stream, inventory);
+        inventory.Save(stream);
+
+        bf.Serialize(stream, facing);
 
         bf.Serialize(stream, status.Count);
 
@@ -98,7 +104,9 @@ public class ClickScript : MonoBehaviour {
 
         hp.current = (int)bf.Deserialize(stream);
 
-        inventory = (Inventory)bf.Deserialize(stream);
+        inventory.Load(stream);
+
+        facing = (int)bf.Deserialize(stream);
 
         int count = (int)bf.Deserialize(stream);
         for (int i=0;i<count;++i)

@@ -10,6 +10,11 @@ public class Inventory
     public List<Item> item;
     public int gold;
 
+    public Inventory()
+    {
+        item = new List<Item>();
+    }
+
     public void Save(Stream stream)
     {
         BinaryFormatter bf = new BinaryFormatter();

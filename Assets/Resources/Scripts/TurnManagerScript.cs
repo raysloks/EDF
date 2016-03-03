@@ -10,6 +10,8 @@ public class TurnManagerScript : MonoBehaviour {
     Dictionary<float, List<ClickScript>> order;
     Dictionary<float, List<ClickScript>> new_order;
 
+    List<ClickScript> on_hold;
+
     public ClickScript current_turnholder;
 
     public SaveManager save_manager;
@@ -19,6 +21,8 @@ public class TurnManagerScript : MonoBehaviour {
         order = new Dictionary<float, List<ClickScript>>();
         new_order = new Dictionary<float, List<ClickScript>>();
 
+        on_hold = new List<ClickScript>();
+
         save_manager = new SaveManager();
 
         save_manager.Load(this);
@@ -26,17 +30,53 @@ public class TurnManagerScript : MonoBehaviour {
 
     public void TempNewGame()
     {
-        var go = Instantiate(Resources.Load("Prefabs/Character"), new Vector3(0.5f, 0.5f, 0.0f), Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f))) as GameObject;
-        var cs = go.GetComponent<ClickScript>();
-        if (!order.ContainsKey(0.0f))
-            order.Add(0.0f, new List<ClickScript>());
-        order[0.0f].Add(cs);
+        NewCharacter(new Vector3(0.5f, 0.5f, 0.0f));
+        NewCharacter(new Vector3(-0.5f, 0.5f, 0.0f));
+    }
 
-        go = Instantiate(Resources.Load("Prefabs/Character"), new Vector3(-0.5f, 0.5f, 0.0f), Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f))) as GameObject;
-        cs = go.GetComponent<ClickScript>();
-        if (!order.ContainsKey(0.5f))
-            order.Add(0.5f, new List<ClickScript>());
-        order[0.5f].Add(cs);
+    public ClickScript NewCharacter(Vector3 position, bool add_to_order = true)
+    {
+        var go = Instantiate(Resources.Load("Prefabs/Character"), position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f))) as GameObject;
+        var cs = go.GetComponent<ClickScript>();
+        cs.Init();
+        if (add_to_order)
+        {
+            if (current_turnholder != null)
+            {
+                if (!new_order.ContainsKey(0.5f))
+                    new_order.Add(0.5f, new List<ClickScript>());
+                new_order[0.5f].Add(cs);
+            }
+            else
+            {
+                if (!order.ContainsKey(0.5f))
+                    order.Add(0.5f, new List<ClickScript>());
+                order[0.5f].Add(cs);
+            }
+        }
+        return cs;
+    }
+
+    void SaveCS(Stream stream, ClickScript cs)
+    {
+        BinaryFormatter bf = new BinaryFormatter();
+
+        Vector3 position = cs.transform.position;
+        bf.Serialize(stream, position.x);
+        bf.Serialize(stream, position.y);
+        bf.Serialize(stream, position.z);
+        cs.Save(stream);
+    }
+
+    ClickScript LoadCS(Stream stream)
+    {
+        BinaryFormatter bf = new BinaryFormatter();
+        
+        Vector3 position = new Vector3((float)bf.Deserialize(stream), (float)bf.Deserialize(stream), (float)bf.Deserialize(stream));
+        var cs = NewCharacter(position, false);
+        cs.Load(stream);
+
+        return cs;
     }
 
     public void Save(Stream stream)
@@ -51,13 +91,14 @@ public class TurnManagerScript : MonoBehaviour {
             bf.Serialize(stream, nume.Current.Value.Count);
             var nume2 = nume.Current.Value.GetEnumerator();
             while (nume2.MoveNext())
-            {
-                Vector3 position = nume2.Current.transform.position;
-                bf.Serialize(stream, position.x);
-                bf.Serialize(stream, position.y);
-                bf.Serialize(stream, position.z);
-                nume2.Current.Save(stream);
-            }
+                SaveCS(stream, nume2.Current);
+        }
+
+        {
+            bf.Serialize(stream, on_hold.Count);
+            var nume2 = on_hold.GetEnumerator();
+            while (nume2.MoveNext())
+                SaveCS(stream, nume2.Current);
         }
     }
 
@@ -74,15 +115,13 @@ public class TurnManagerScript : MonoBehaviour {
             List<ClickScript> list = new List<ClickScript>();
             int count2 = (int)bf.Deserialize(stream);
             for (int j=0;j<count2;++j)
-            {
-                Vector3 position = new Vector3((float)bf.Deserialize(stream), (float)bf.Deserialize(stream), (float)bf.Deserialize(stream));
-                var go = Instantiate(Resources.Load("Prefabs/Character"), position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f))) as GameObject;
-                var cs = go.GetComponent<ClickScript>();
-                cs.Load(stream);
-                list.Add(cs);
-            }
+                list.Add(LoadCS(stream));
             order.Add(key, list);
         }
+        
+        int on_hold_count = (int)bf.Deserialize(stream);
+        for (int i=0;i<on_hold_count;++i)
+            on_hold.Add(LoadCS(stream));
     }
 	
 	// Update is called once per frame
@@ -97,7 +136,7 @@ public class TurnManagerScript : MonoBehaviour {
                 {
                     if (nume2.Current.Hold())
                     {
-
+                        on_hold.Add(nume2.Current);
                     }
                     else
                     {
