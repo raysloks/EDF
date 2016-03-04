@@ -40,13 +40,16 @@ public class EldritchScholarTrait : Trait
 		}
 		if (use && iseldritch || identify)
 		{
-			int smallest_id = 0;
-			for (int i=1;i<data.roll.Count;++i)
-			{
-				if (data.roll[i]<data.roll[smallest_id])
-					smallest_id = i;
-			}
-			data.roll[smallest_id] = Math.Max(data.roll[smallest_id], RandomManager.d6());
+            if (data.roll.Count > 0)
+            {
+                int smallest_id = 0;
+                for (int i = 1; i < data.roll.Count; ++i)
+                {
+                    if (data.roll[i] < data.roll[smallest_id])
+                        smallest_id = i;
+                }
+                data.roll[smallest_id] = Math.Max(data.roll[smallest_id], RandomManager.d6());
+            }
 		}
 	}
 	

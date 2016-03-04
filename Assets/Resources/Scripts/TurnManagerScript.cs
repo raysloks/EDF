@@ -83,6 +83,8 @@ public class TurnManagerScript : MonoBehaviour {
     {
         BinaryFormatter bf = new BinaryFormatter();
 
+        bf.Serialize(stream, RandomManager.random);
+
         bf.Serialize(stream, order.Count);
         var nume = order.GetEnumerator();
         while (nume.MoveNext())
@@ -105,6 +107,8 @@ public class TurnManagerScript : MonoBehaviour {
     public void Load(Stream stream)
     {
         BinaryFormatter bf = new BinaryFormatter();
+
+        RandomManager.random = (System.Random)bf.Deserialize(stream);
 
         order.Clear();
 

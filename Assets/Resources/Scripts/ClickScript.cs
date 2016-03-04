@@ -22,6 +22,8 @@ public class ClickScript : MonoBehaviour {
 
     public int facing;
 
+    CharacterData stats;
+
     public List<Status> status;
 
     public delegate void OnRollDelegate(ClickScript cs, RollData data);
@@ -138,6 +140,20 @@ public class ClickScript : MonoBehaviour {
         return 0;
     }
 
+    public void OnRoll(RollData data)
+    {
+        List<float> empty = new List<float>();
+        var nume = onRoll.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, data);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onHit.Remove(nume2.Current);
+    }
+
     public void OnHit(HitData data)
     {
         {
@@ -208,18 +224,31 @@ public class ClickScript : MonoBehaviour {
 
     public void OnTurnEnd(TurnData data)
     {
-        {
-            List<float> empty = new List<float>();
-            var nume = onTurnEnd.GetEnumerator();
-            while (nume.MoveNext())
-                if (nume.Current.Value != null)
-                    nume.Current.Value(this, data);
-                else
-                    empty.Add(nume.Current.Key);
-            var nume2 = empty.GetEnumerator();
-            while (nume.MoveNext())
-                onTurnEnd.Remove(nume2.Current);
-        }
+        List<float> empty = new List<float>();
+        var nume = onTurnEnd.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, data);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onTurnEnd.Remove(nume2.Current);
+    }
+
+    public void RecalculateStats()
+    {
+        stats = new CharacterData();
+        List<float> empty = new List<float>();
+        var nume = onRecalculateStats.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, stats);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onTurnEnd.Remove(nume2.Current);
     }
 
     public List<string> GetTypes()
@@ -278,7 +307,26 @@ public class ClickScript : MonoBehaviour {
                             HitData hd = new HitData(this, other);
                             hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
 
-                            other.OnHit(hd);
+                            RollData attacker = new RollData();
+
+                            attacker.source = this;
+                            attacker.target = other;
+                            attacker.type.Add("attack");
+                            attacker.type.Add("melee");
+
+                            RollData defender = new RollData(attacker);
+
+                            defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), 2));
+
+                            attacker.roll.Add(RandomManager.d6());
+
+                            OnRoll(attacker);
+                            other.OnRoll(defender);
+
+                            if (attacker.GetBoth()>0)
+                            {
+                                other.OnHit(hd);
+                            }
 
                             anim.SetTrigger("attack");
                             transition = 0.5f;
