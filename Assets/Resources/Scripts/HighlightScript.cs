@@ -8,6 +8,8 @@ public class HighlightScript : MonoBehaviour {
     public TurnManagerScript tm;
     public PathManagerScript pm;
 
+    bool pe;
+
 	// Use this for initialization
 	void Start () {
         rend = GetComponent<SpriteRenderer>();
@@ -16,8 +18,6 @@ public class HighlightScript : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         Vector3 prev_pos = transform.position;
-
-        bool pe = rend.enabled;
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var rh = Physics.RaycastAll(ray);
@@ -79,5 +79,7 @@ public class HighlightScript : MonoBehaviour {
                         pm.Construct(tm.terrain.GetPath(s, e), transform.position);
                     }
         }
+
+        pe = rend.enabled;
     }
 }

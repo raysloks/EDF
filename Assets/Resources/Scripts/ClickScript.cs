@@ -61,22 +61,17 @@ public class ClickScript : MonoBehaviour {
     public DelegateDictionary<OnRecalculateStatsDelegate> onRecalculateStats;
     public DelegateDictionary<OnGetTypeDelegate> onGetType;
 
-    public static ClickScript getCharacterAt(Vector3 pos)
+    public static ClickScript getCharacterAt(Vector2 pos)
     {
-        Ray ray = new Ray(pos + new Vector3(0.0f, 0.0f, 100.0f), pos + new Vector3(0.0f, 0.0f, -100.0f));
+        Ray ray = new Ray(new Vector3(pos.x, pos.y) + new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, 0.0f, 1.0f));
         var rh = Physics.RaycastAll(ray);
-        int rh_final = -1;
+        Debug.DrawRay(new Vector3(pos.x, pos.y) + new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, 0.0f, 1.0f), new Color(1.0f, 1.0f, 1.0f), 1.0f);
         for (int i = 0; i < rh.Length; ++i)
         {
             ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
             if (other != null)
-                rh_final = i;
-            else
-                if (rh_final < 0)
-                    rh_final = i;
+                return other;
         }
-        if (rh_final >= 0)
-            return rh[rh_final].transform.GetComponentInParent<ClickScript>();
         return null;
     }
 
@@ -403,10 +398,18 @@ public class ClickScript : MonoBehaviour {
             {
                 if (path.Count > 0)
                 {
-                    if (path[path.Count - 1] - new Vector2(transform.position.x, transform.position.y) == new Vector2())
-                        path.RemoveAt(path.Count - 1);
-                    if (path.Count > 0)
+                    if (target - new Vector2(transform.position.x, transform.position.y) == new Vector2())
+                    {
                         target = path[path.Count - 1];
+                        path.RemoveAt(path.Count - 1);
+                        Debug.Log("Path node consumed " + target.x + " " + target.y);
+                        ClickScript cs_at_target = getCharacterAt(target);
+                        if (cs_at_target != null && cs_at_target != this)
+                        {
+                            target = transform.position;
+                            path.Clear();
+                        }
+                    }
                 }
             }
 

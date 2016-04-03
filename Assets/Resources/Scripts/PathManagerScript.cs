@@ -13,7 +13,11 @@ public class PathManagerScript : MonoBehaviour {
         sprites = Resources.LoadAll<Sprite>("Sprites/directions");
 
         for (int i=0;i<256;++i)
-            lines.Add(Instantiate(Resources.Load("Prefabs/Line")) as GameObject);
+        {
+            GameObject line = Instantiate(Resources.Load("Prefabs/Line")) as GameObject;
+            line.SetActive(false);
+            lines.Add(line);
+        }
 	}
 	
 	// Update is called once per frame

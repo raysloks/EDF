@@ -34,8 +34,17 @@ public class TurnManagerScript : MonoBehaviour {
     {
         Clear();
 
-        NewCharacter(new Vector3(0.5f, 0.5f, 0.0f)).player = true;
-        NewCharacter(new Vector3(-0.5f, 0.5f, 0.0f));
+        ClickScript cs1 = NewCharacter(new Vector3(0.5f, 0.5f, 0.0f));
+        cs1.player = true;
+        ClickScript cs2 = NewCharacter(new Vector3(-0.5f, 0.5f, 0.0f));
+        cs2.player = true;
+
+        ClickScript cs3 = NewCharacter(new Vector3(0.5f, -0.5f, 0.0f));
+        cs3.player = true;
+        cs3.team = 1;
+        ClickScript cs4 = NewCharacter(new Vector3(-0.5f, -0.5f, 0.0f));
+        cs4.player = true;
+        cs4.team = 1;
     }
 
     public void Clear()
