@@ -22,6 +22,8 @@ public class ClickScript : MonoBehaviour {
 
     public int facing;
 
+    CharacterData stats;
+
     public List<Status> status;
 
     public delegate void OnRollDelegate(ClickScript cs, RollData data);
@@ -55,8 +57,26 @@ public class ClickScript : MonoBehaviour {
     public DelegateDictionary<OnRecalculateStatsDelegate> onRecalculateStats;
     public DelegateDictionary<OnGetTypeDelegate> onGetType;
 
-    // Use this for initialization
-    void Start()
+    public static ClickScript getCharacterAt(Vector3 pos)
+    {
+        Ray ray = new Ray(pos + new Vector3(0.0f, 0.0f, 100.0f), pos + new Vector3(0.0f, 0.0f, -100.0f));
+        var rh = Physics.RaycastAll(ray);
+        int rh_final = -1;
+        for (int i = 0; i < rh.Length; ++i)
+        {
+            ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
+            if (other != null)
+                rh_final = i;
+            else
+                if (rh_final < 0)
+                    rh_final = i;
+        }
+        if (rh_final >= 0)
+            return rh[rh_final].transform.GetComponentInParent<ClickScript>();
+        return null;
+    }
+
+    public void Init()
     {
         onRoll = new DelegateDictionary<OnRollDelegate>();
         onHit = new DelegateDictionary<OnHitDelegate>();
@@ -67,12 +87,17 @@ public class ClickScript : MonoBehaviour {
 
         status = new List<Status>();
 
+        inventory = new Inventory();
+
         GameObject obj = Instantiate(Resources.Load("Prefabs/Shadow")) as GameObject;
         ShadowScript ss = obj.GetComponent<ShadowScript>();
         ss.follow = transform;
 
         target = transform.position;
         anim = GetComponentInChildren<Animator>();
+
+        hp.max = 4;
+        hp.current = 4;
     }
 
     public void Save(Stream stream)
@@ -81,6 +106,10 @@ public class ClickScript : MonoBehaviour {
 
         bf.Serialize(stream, hp.current);
 
+        inventory.Save(stream);
+
+        bf.Serialize(stream, facing);
+        
         bf.Serialize(stream, status.Count);
 
         var nume = status.GetEnumerator();
@@ -95,7 +124,11 @@ public class ClickScript : MonoBehaviour {
         BinaryFormatter bf = new BinaryFormatter();
 
         hp.current = (int)bf.Deserialize(stream);
+        
+        inventory.Load(stream);
 
+        facing = (int)bf.Deserialize(stream);
+        
         int count = (int)bf.Deserialize(stream);
         for (int i=0;i<count;++i)
         {
@@ -124,6 +157,20 @@ public class ClickScript : MonoBehaviour {
             return 1;
         }
         return 0;
+    }
+
+    public void OnRoll(RollData data)
+    {
+        List<float> empty = new List<float>();
+        var nume = onRoll.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, data);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onHit.Remove(nume2.Current);
     }
 
     public void OnHit(HitData data)
@@ -189,25 +236,38 @@ public class ClickScript : MonoBehaviour {
             var anim = GetComponentInChildren<Animator>();
             if (anim != null)
             {
-                anim.SetTrigger("death");
+                anim.SetBool("dead", true);
             }
         }
     }
 
     public void OnTurnEnd(TurnData data)
     {
-        {
-            List<float> empty = new List<float>();
-            var nume = onTurnEnd.GetEnumerator();
-            while (nume.MoveNext())
-                if (nume.Current.Value != null)
-                    nume.Current.Value(this, data);
-                else
-                    empty.Add(nume.Current.Key);
-            var nume2 = empty.GetEnumerator();
-            while (nume.MoveNext())
-                onTurnEnd.Remove(nume2.Current);
-        }
+        List<float> empty = new List<float>();
+        var nume = onTurnEnd.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, data);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onTurnEnd.Remove(nume2.Current);
+    }
+
+    public void RecalculateStats()
+    {
+        stats = new CharacterData();
+        List<float> empty = new List<float>();
+        var nume = onRecalculateStats.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, stats);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onTurnEnd.Remove(nume2.Current);
     }
 
     public List<string> GetTypes()
@@ -235,7 +295,7 @@ public class ClickScript : MonoBehaviour {
         {
             if (my_turn)
             {
-                if (Input.GetMouseButtonDown(0))
+                if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
                 {
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                     var rh = Physics.RaycastAll(ray);
@@ -244,14 +304,10 @@ public class ClickScript : MonoBehaviour {
                     {
                         ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
                         if (other != null && other != this)
-                        {
                             rh_final = i;
-                        }
                         else
-                        {
                             if (rh_final < 0)
                                 rh_final = i;
-                        }
                     }
                     if (rh_final >= 0)
                     {
@@ -266,7 +322,31 @@ public class ClickScript : MonoBehaviour {
                             HitData hd = new HitData(this, other);
                             hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
 
-                            other.OnHit(hd);
+                            RollData attacker = new RollData();
+
+                            attacker.source = this;
+                            attacker.target = other;
+                            attacker.type.Add("attack");
+                            attacker.type.Add("melee");
+
+                            RollData defender = new RollData(attacker);
+
+                            defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), 7));
+
+                            attacker.roll.Add(RandomManager.d6());
+                            attacker.roll.Add(RandomManager.d6());
+
+                            OnRoll(attacker);
+                            other.OnRoll(defender);
+
+                            int result = attacker.GetBoth();
+
+                            Debug.Log(result);
+
+                            if (result>=0)
+                            {
+                                other.OnHit(hd);
+                            }
 
                             anim.SetTrigger("attack");
                             transition = 0.5f;

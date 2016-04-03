@@ -9,10 +9,52 @@ public class RollData
     public List<string> type;
     public List<KeyValuePair<List<string>, int>> bonus;
     public List<int> roll;
+    public RollData other;
 
-    public void FlipBonus()
+    public RollData(RollData other)
     {
-        for (int i=0;i<bonus.Count;++i)
-            bonus[i] = new KeyValuePair<List<string>, int>(bonus[i].Key, -bonus[i].Value);
+        source = other.source;
+        target = other.target;
+
+        type = new List<string>(other.type);
+
+        bonus = new List<KeyValuePair<List<string>, int>>();
+
+        roll = new List<int>();
+
+        this.other = other;
+        other.other = this;
+    }
+
+    public RollData()
+    {
+        type = new List<string>();
+
+        bonus = new List<KeyValuePair<List<string>, int>>();
+
+        roll = new List<int>();
+    }
+
+    public int Get()
+    {
+        int sum = 0;
+
+        var nume = bonus.GetEnumerator();
+        while (nume.MoveNext())
+            sum += nume.Current.Value;
+
+        var nume2 = roll.GetEnumerator();
+        while (nume2.MoveNext())
+            sum += nume2.Current;
+
+        return sum;
+    }
+
+    public int GetBoth()
+    {
+        int sum = Get();
+        if (other != null)
+            sum -= other.Get();
+        return sum;
     }
 }

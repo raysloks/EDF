@@ -6,6 +6,7 @@ public class HighlightScript : MonoBehaviour {
     SpriteRenderer rend;
 
     public TurnManagerScript tm;
+    public PathManagerScript pm;
 
 	// Use this for initialization
 	void Start () {
@@ -14,12 +15,15 @@ public class HighlightScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+        Vector3 prev_pos = transform.position;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var rh = Physics.RaycastAll(ray);
         rend.enabled = false;
         bool no_input = false;
         if (tm.current_turnholder != null)
             no_input = !tm.current_turnholder.my_turn;
+        no_input |= UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
         if (!no_input)
         {
             rend.material.color = new Color(1.0f, 1.0f, 1.0f);
@@ -56,6 +60,20 @@ public class HighlightScript : MonoBehaviour {
                 }
                 rend.enabled = true;
             }
+        }
+        
+        if (pm != null && tm != null)
+        {
+            if (!rend.enabled)
+                pm.Clear();
+            else
+                if (prev_pos != transform.position || pm.lines.Count == 0)
+                    if (tm.current_turnholder != null)
+                    {
+                        Vector2 s = new Vector2(tm.current_turnholder.transform.position.x, tm.current_turnholder.transform.position.y);
+                        Vector2 e = new Vector2(transform.position.x, transform.position.y);
+                        pm.Construct(tm.terrain.GetPath(s, e), transform.position);
+                    }
         }
     }
 }

@@ -16,7 +16,7 @@ public class BrandedTrait : Trait
 
 	void OnRoll(ClickScript cs, RollData data)
 	{
-		var nume = data.type.GetEnumerator ();
+		var nume = data.type.GetEnumerator();
 		while (nume.MoveNext()) 
 		{
 			if (nume.Current.CompareTo("pray")==0)
