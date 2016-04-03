@@ -350,6 +350,10 @@ public class ClickScript : MonoBehaviour {
                             {
                                 other.OnHit(hd);
                             }
+							else
+							{
+								Instantiate(Resources.Load("Prefabs/MissMessage"), other.transform.position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f)));
+							}
 
                             anim.SetTrigger("attack");
                             transition = 0.5f;
