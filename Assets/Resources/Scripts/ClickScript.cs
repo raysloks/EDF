@@ -22,6 +22,10 @@ public class ClickScript : MonoBehaviour {
 
     public int facing;
 
+	public int team;
+
+	public bool player;
+
     CharacterData stats;
 
     public List<Status> status;
@@ -109,7 +113,11 @@ public class ClickScript : MonoBehaviour {
         inventory.Save(stream);
 
         bf.Serialize(stream, facing);
+
+		bf.Serialize(stream, team);
         
+		bf.Serialize(stream, player);
+
         bf.Serialize(stream, status.Count);
 
         var nume = status.GetEnumerator();
@@ -130,7 +138,11 @@ public class ClickScript : MonoBehaviour {
         
         inventory.Load(stream);
 
-        facing = (int)bf.Deserialize(stream);
+		facing = (int)bf.Deserialize(stream);
+
+		team = (int)bf.Deserialize(stream);
+
+		player = (bool)bf.Deserialize(stream);
         
         int count = (int)bf.Deserialize(stream);
         for (int i=0;i<count;++i)
@@ -298,83 +310,93 @@ public class ClickScript : MonoBehaviour {
         {
             if (my_turn)
             {
-                if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
-                {
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    var rh = Physics.RaycastAll(ray);
-                    int rh_final = -1;
-                    for (int i = 0; i < rh.Length; ++i)
-                    {
-                        ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
-                        if (other != null && other != this)
-                            rh_final = i;
-                        else
-                            if (rh_final < 0)
-                                rh_final = i;
-                    }
-                    if (rh_final >= 0)
-                    {
-                        ClickScript other = rh[rh_final].transform.GetComponentInParent<ClickScript>();
-                        if (other != null && other != this)
-                        {
-                            if (other.transform.position.x > transform.position.x)
-                                facing = 1;
-                            if (other.transform.position.x < transform.position.x)
-                                facing = -1;
+				if (player)
+				{
+	                if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+	                {
+	                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+	                    var rh = Physics.RaycastAll(ray);
+	                    int rh_final = -1;
+	                    for (int i = 0; i < rh.Length; ++i)
+	                    {
+	                        ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
+	                        if (other != null && other != this)
+	                            rh_final = i;
+	                        else
+	                            if (rh_final < 0)
+	                                rh_final = i;
+	                    }
+	                    if (rh_final >= 0)
+	                    {
+	                        ClickScript other = rh[rh_final].transform.GetComponentInParent<ClickScript>();
+	                        if (other != null && other != this)
+	                        {
+								if (other.team != team)
+								{
+		                            if (other.transform.position.x > transform.position.x)
+		                                facing = 1;
+		                            if (other.transform.position.x < transform.position.x)
+		                                facing = -1;
 
-                            HitData hd = new HitData(this, other);
-                            hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
+		                            HitData hd = new HitData(this, other);
+		                            hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
 
-                            RollData attacker = new RollData();
+		                            RollData attacker = new RollData();
 
-                            attacker.source = this;
-                            attacker.target = other;
-                            attacker.type.Add("attack");
-                            attacker.type.Add("melee");
+		                            attacker.source = this;
+		                            attacker.target = other;
+		                            attacker.type.Add("attack");
+		                            attacker.type.Add("melee");
 
-                            RollData defender = new RollData(attacker);
+		                            RollData defender = new RollData(attacker);
 
-                            defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), 7));
+		                            defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), 7));
 
-                            attacker.roll.Add(RandomManager.d6());
-                            attacker.roll.Add(RandomManager.d6());
+		                            attacker.roll.Add(RandomManager.d6());
+		                            attacker.roll.Add(RandomManager.d6());
 
-                            OnRoll(attacker);
-                            other.OnRoll(defender);
+		                            OnRoll(attacker);
+		                            other.OnRoll(defender);
 
-                            int result = attacker.GetBoth();
+		                            int result = attacker.GetBoth();
 
-                            Debug.Log(result);
+		                            Debug.Log(result);
 
-                            if (result>=0)
-                            {
-                                other.OnHit(hd);
-                            }
-							else
-							{
-								Instantiate(Resources.Load("Prefabs/MissMessage"), other.transform.position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f)));
-							}
+		                            if (result>=0)
+		                            {
+		                                other.OnHit(hd);
+		                            }
+									else
+									{
+										Instantiate(Resources.Load("Prefabs/MissMessage"), other.transform.position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f)));
+									}
 
-                            anim.SetTrigger("attack");
-                            transition = 0.5f;
+		                            anim.SetTrigger("attack");
+		                            transition = 0.5f;
 
-                            my_turn = false;
-                        }
-                        else
-                        {
-                            Vector2 ntarget = rh[rh_final].point;
+		                            my_turn = false;	
+								}
+	                        }
+	                        else
+	                        {
+	                            Vector2 ntarget = rh[rh_final].point;
 
-                            ntarget.x = Mathf.Round(ntarget.x - 0.5f) + 0.5f;
-                            ntarget.y = Mathf.Round(ntarget.y - 0.5f) + 0.5f;
+	                            ntarget.x = Mathf.Round(ntarget.x - 0.5f) + 0.5f;
+	                            ntarget.y = Mathf.Round(ntarget.y - 0.5f) + 0.5f;
 
-                            TerrainScript ts = rh[rh_final].transform.GetComponent<TerrainScript>();
-                            if (ts != null)
-                                path = ts.GetPath(transform.position, ntarget);
+	                            TerrainScript ts = rh[rh_final].transform.GetComponent<TerrainScript>();
+	                            if (ts != null)
+	                                path = ts.GetPath(transform.position, ntarget);
 
-                            my_turn = false;
-                        }
-                    }
-                }
+	                            my_turn = false;
+	                        }
+	                    }
+	                }
+				}
+				else
+				{
+
+				}
             }
 
             if (path != null)

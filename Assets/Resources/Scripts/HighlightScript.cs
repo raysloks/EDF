@@ -49,6 +49,8 @@ public class HighlightScript : MonoBehaviour {
                 if (other != null && other != tm.current_turnholder)
                 {
                     rend.material.color = new Color(1.0f, 0.0f, 0.0f);
+					if (other.team == tm.current_turnholder.team)
+						rend.material.color = new Color(0.0f, 1.0f, 0.0f);
                     transform.position = other.transform.position;
                     transform.localScale = rh[rh_final].transform.localScale;
                 }

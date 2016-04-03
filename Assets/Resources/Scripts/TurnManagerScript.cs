@@ -34,7 +34,7 @@ public class TurnManagerScript : MonoBehaviour {
     {
         Clear();
 
-        NewCharacter(new Vector3(0.5f, 0.5f, 0.0f));
+        NewCharacter(new Vector3(0.5f, 0.5f, 0.0f)).player = true;
         NewCharacter(new Vector3(-0.5f, 0.5f, 0.0f));
     }
 
