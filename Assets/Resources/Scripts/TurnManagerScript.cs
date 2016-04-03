@@ -14,6 +14,8 @@ public class TurnManagerScript : MonoBehaviour {
 
     public ClickScript current_turnholder;
 
+    public TerrainScript terrain;
+
     public SaveManager save_manager;
 
 	// Use this for initialization
@@ -30,8 +32,34 @@ public class TurnManagerScript : MonoBehaviour {
 
     public void TempNewGame()
     {
+        Clear();
+
         NewCharacter(new Vector3(0.5f, 0.5f, 0.0f));
         NewCharacter(new Vector3(-0.5f, 0.5f, 0.0f));
+    }
+
+    public void Clear()
+    {
+        current_turnholder = null;
+
+        var nume = order.GetEnumerator();
+        while (nume.MoveNext())
+        {
+            var nume2 = nume.Current.Value.GetEnumerator();
+            while (nume2.MoveNext())
+            {
+                Destroy(nume2.Current.gameObject);
+            }
+        }
+        order.Clear();
+        new_order.Clear();
+
+        var on_hold_nume = on_hold.GetEnumerator();
+        while (on_hold_nume.MoveNext())
+        {
+            Destroy(on_hold_nume.Current.gameObject);
+        }
+        on_hold.Clear();
     }
 
     public ClickScript NewCharacter(Vector3 position, bool add_to_order = true)

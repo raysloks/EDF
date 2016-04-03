@@ -57,6 +57,25 @@ public class ClickScript : MonoBehaviour {
     public DelegateDictionary<OnRecalculateStatsDelegate> onRecalculateStats;
     public DelegateDictionary<OnGetTypeDelegate> onGetType;
 
+    public static ClickScript getCharacterAt(Vector3 pos)
+    {
+        Ray ray = new Ray(pos + new Vector3(0.0f, 0.0f, 100.0f), pos + new Vector3(0.0f, 0.0f, -100.0f));
+        var rh = Physics.RaycastAll(ray);
+        int rh_final = -1;
+        for (int i = 0; i < rh.Length; ++i)
+        {
+            ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
+            if (other != null)
+                rh_final = i;
+            else
+                if (rh_final < 0)
+                    rh_final = i;
+        }
+        if (rh_final >= 0)
+            return rh[rh_final].transform.GetComponentInParent<ClickScript>();
+        return null;
+    }
+
     public void Init()
     {
         onRoll = new DelegateDictionary<OnRollDelegate>();
@@ -217,7 +236,7 @@ public class ClickScript : MonoBehaviour {
             var anim = GetComponentInChildren<Animator>();
             if (anim != null)
             {
-                anim.SetTrigger("death");
+                anim.SetBool("dead", true);
             }
         }
     }
@@ -276,7 +295,7 @@ public class ClickScript : MonoBehaviour {
         {
             if (my_turn)
             {
-                if (Input.GetMouseButtonDown(0))
+                if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
                 {
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                     var rh = Physics.RaycastAll(ray);
@@ -285,14 +304,10 @@ public class ClickScript : MonoBehaviour {
                     {
                         ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
                         if (other != null && other != this)
-                        {
                             rh_final = i;
-                        }
                         else
-                        {
                             if (rh_final < 0)
                                 rh_final = i;
-                        }
                     }
                     if (rh_final >= 0)
                     {
@@ -316,14 +331,19 @@ public class ClickScript : MonoBehaviour {
 
                             RollData defender = new RollData(attacker);
 
-                            defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), 2));
+                            defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), 7));
 
+                            attacker.roll.Add(RandomManager.d6());
                             attacker.roll.Add(RandomManager.d6());
 
                             OnRoll(attacker);
                             other.OnRoll(defender);
 
-                            if (attacker.GetBoth()>0)
+                            int result = attacker.GetBoth();
+
+                            Debug.Log(result);
+
+                            if (result>=0)
                             {
                                 other.OnHit(hd);
                             }
