@@ -17,6 +17,8 @@ public class HighlightScript : MonoBehaviour {
 	void Update () {
         Vector3 prev_pos = transform.position;
 
+        bool pe = rend.enabled;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var rh = Physics.RaycastAll(ray);
         rend.enabled = false;
@@ -67,7 +69,7 @@ public class HighlightScript : MonoBehaviour {
             if (!rend.enabled)
                 pm.Clear();
             else
-                if (prev_pos != transform.position || pm.lines.Count == 0)
+                if (prev_pos != transform.position || rend.enabled && !pe)
                     if (tm.current_turnholder != null)
                     {
                         Vector2 s = new Vector2(tm.current_turnholder.transform.position.x, tm.current_turnholder.transform.position.y);

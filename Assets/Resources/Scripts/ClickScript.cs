@@ -124,6 +124,9 @@ public class ClickScript : MonoBehaviour {
         BinaryFormatter bf = new BinaryFormatter();
 
         hp.current = (int)bf.Deserialize(stream);
+
+        if (hp.current <= 0)
+            anim.SetBool("dead", true);
         
         inventory.Load(stream);
 
