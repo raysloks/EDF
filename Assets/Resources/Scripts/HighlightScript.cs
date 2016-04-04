@@ -22,7 +22,7 @@ public class HighlightScript : MonoBehaviour {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var rh = Physics.RaycastAll(ray);
         rend.enabled = false;
-        bool no_input = false;
+        bool no_input = true;
         if (tm.current_turnholder != null)
             no_input = !tm.current_turnholder.my_turn;
         no_input |= UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
@@ -49,8 +49,9 @@ public class HighlightScript : MonoBehaviour {
                 if (other != null && other != tm.current_turnholder)
                 {
                     rend.material.color = new Color(1.0f, 0.0f, 0.0f);
-					if (other.team == tm.current_turnholder.team)
-						rend.material.color = new Color(0.0f, 1.0f, 0.0f);
+                    if (tm.current_turnholder != null)
+					    if (other.team == tm.current_turnholder.team)
+						    rend.material.color = new Color(0.0f, 1.0f, 0.0f);
                     transform.position = other.transform.position;
                     transform.localScale = rh[rh_final].transform.localScale;
                 }
@@ -72,12 +73,11 @@ public class HighlightScript : MonoBehaviour {
                 pm.Clear();
             else
                 if (prev_pos != transform.position || rend.enabled && !pe)
-                    if (tm.current_turnholder != null)
-                    {
-                        Vector2 s = new Vector2(tm.current_turnholder.transform.position.x, tm.current_turnholder.transform.position.y);
-                        Vector2 e = new Vector2(transform.position.x, transform.position.y);
-                        pm.Construct(tm.terrain.GetPath(s, e), transform.position);
-                    }
+                {
+                    Vector2 s = new Vector2(tm.current_turnholder.transform.position.x, tm.current_turnholder.transform.position.y);
+                    Vector2 e = new Vector2(transform.position.x, transform.position.y);
+                    pm.Construct(tm.terrain.GetPath(s, e), transform.position);
+                }
         }
 
         pe = rend.enabled;

@@ -5,6 +5,8 @@ using System.IO;
 
 public class ClickScript : MonoBehaviour {
 
+    public TurnManagerScript tm;
+
     Animator anim;
     public HealthScript hp;
 
@@ -36,6 +38,8 @@ public class ClickScript : MonoBehaviour {
     public delegate void OnTurnEndDelegate(ClickScript cs, TurnData data);
     public delegate void OnRecalculateStatsDelegate(ClickScript cs, CharacterData data);
     public delegate void OnGetTypeDelegate(ClickScript cs, TypeData data);
+    public delegate void OnStatusGainedDelegate(ClickScript cs, Status status);
+    public delegate void OnStatusLostDelegate(ClickScript cs, Status status);
 
     public class DelegateDictionary<TValue> : Dictionary<float, TValue>
     {
@@ -60,12 +64,13 @@ public class ClickScript : MonoBehaviour {
     public DelegateDictionary<OnTurnEndDelegate> onTurnEnd;
     public DelegateDictionary<OnRecalculateStatsDelegate> onRecalculateStats;
     public DelegateDictionary<OnGetTypeDelegate> onGetType;
+    public DelegateDictionary<OnStatusGainedDelegate> onStatusGained;
+    public DelegateDictionary<OnStatusLostDelegate> onStatusLost;
 
     public static ClickScript getCharacterAt(Vector2 pos)
     {
         Ray ray = new Ray(new Vector3(pos.x, pos.y) + new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, 0.0f, 1.0f));
         var rh = Physics.RaycastAll(ray);
-        Debug.DrawRay(new Vector3(pos.x, pos.y) + new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, 0.0f, 1.0f), new Color(1.0f, 1.0f, 1.0f), 1.0f);
         for (int i = 0; i < rh.Length; ++i)
         {
             ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
@@ -83,6 +88,8 @@ public class ClickScript : MonoBehaviour {
         onTurnEnd = new DelegateDictionary<OnTurnEndDelegate>();
         onRecalculateStats = new DelegateDictionary<OnRecalculateStatsDelegate>();
         onGetType = new DelegateDictionary<OnGetTypeDelegate>();
+        onStatusGained = new DelegateDictionary<OnStatusGainedDelegate>();
+        onStatusLost = new DelegateDictionary<OnStatusLostDelegate>();
 
         status = new List<Status>();
 
@@ -94,6 +101,8 @@ public class ClickScript : MonoBehaviour {
 
         target = transform.position;
         anim = GetComponentInChildren<Animator>();
+
+        path = new List<Vector2>();
 
         hp.max = 4;
         hp.current = 4;
@@ -146,6 +155,8 @@ public class ClickScript : MonoBehaviour {
             nstatus.Attach(this);
             status.Add(nstatus);
         }
+
+        RecalculateStats();
     }
 
     public bool Hold()
@@ -265,6 +276,38 @@ public class ClickScript : MonoBehaviour {
             onTurnEnd.Remove(nume2.Current);
     }
 
+    public void OnStatusGained(Status status)
+    {
+        List<float> empty = new List<float>();
+        var nume = onStatusGained.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, status);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onStatusGained.Remove(nume2.Current);
+
+        RecalculateStats();
+    }
+
+    public void OnStatusLost(Status status)
+    {
+        List<float> empty = new List<float>();
+        var nume = onStatusLost.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, status);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onStatusLost.Remove(nume2.Current);
+
+        RecalculateStats();
+    }
+
     public void RecalculateStats()
     {
         stats = new CharacterData();
@@ -381,7 +424,9 @@ public class ClickScript : MonoBehaviour {
 
 	                            TerrainScript ts = rh[rh_final].transform.GetComponent<TerrainScript>();
 	                            if (ts != null)
-	                                path = ts.GetPath(transform.position, ntarget);
+                                    path = ts.GetPath(transform.position, ntarget);
+                                if (path.Count > 0)
+                                    path.RemoveAt(path.Count - 1);
 
 	                            my_turn = false;
 	                        }
@@ -409,6 +454,11 @@ public class ClickScript : MonoBehaviour {
                             target = transform.position;
                             path.Clear();
                         }
+                        else
+                        {
+                            tm.terrain.SetCell(transform.position, true);
+                            tm.terrain.SetCell(target, false);
+                        }
                     }
                 }
             }
@@ -420,7 +470,7 @@ public class ClickScript : MonoBehaviour {
             transition -= Time.deltaTime;
             if (transition < 0.0f)
                 transition = 0.0f;
-            if (delta == new Vector2() && !my_turn && transition <= 0.0f)
+            if (delta == new Vector2() && !my_turn && transition <= 0.0f && path.Count == 0)
                 advance = 1.0f;
 
             if (delta.x > 0.0f)

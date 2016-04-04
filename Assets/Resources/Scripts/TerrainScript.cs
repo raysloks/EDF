@@ -5,10 +5,8 @@ public class TerrainScript : MonoBehaviour {
 
     List<List<bool>> grid;
     Vector2 origin, size;
-
-	// Use this for initialization
-	void Start () {
-
+    
+	public void Init () {
         origin = new Vector2(-5.0f, -5.0f);
         size = new Vector2(10.0f, 10.0f);
 
@@ -23,20 +21,32 @@ public class TerrainScript : MonoBehaviour {
         }
     }
 
+    public void SetCell(Vector2 position, bool value)
+    {
+        KeyValuePair<int, int> cpos = GetCellPosition(position);
+        grid[cpos.Key][cpos.Value] = value;
+    }
+
+    public bool GetCell(Vector2 position)
+    {
+        KeyValuePair<int, int> cpos = GetCellPosition(position);
+        return grid[cpos.Key][cpos.Value];
+    }
+
+    public KeyValuePair<int, int> GetCellPosition(Vector2 position)
+    {
+        position -= origin;
+
+        position.x = Mathf.Max(Mathf.Min(position.x, size.x), 0.0f);
+        position.y = Mathf.Max(Mathf.Min(position.y, size.y), 0.0f);
+
+        return new KeyValuePair<int, int>(Mathf.FloorToInt(position.x), Mathf.FloorToInt(position.y));
+    }
+
     public List<Vector2> GetPath(Vector2 start, Vector2 end)
     {
-        // adjust position
-        start -= origin;
-        end -= origin;
-
-        // clamp position
-        start.x = Mathf.Max(Mathf.Min(start.x, size.x), 0.0f);
-        start.y = Mathf.Max(Mathf.Min(start.y, size.y), 0.0f);
-        end.x = Mathf.Max(Mathf.Min(end.x, size.x), 0.0f);
-        end.y = Mathf.Max(Mathf.Min(end.y, size.y), 0.0f);
-
-        KeyValuePair<int, int> source = new KeyValuePair<int, int>(Mathf.FloorToInt(start.x), Mathf.FloorToInt(start.y));
-        KeyValuePair<int, int> target = new KeyValuePair<int, int>(Mathf.FloorToInt(end.x), Mathf.FloorToInt(end.y));
+        KeyValuePair<int, int> source = GetCellPosition(start);
+        KeyValuePair<int, int> target = GetCellPosition(end);
 
         HashSet<KeyValuePair<int, int>> closed = new HashSet<KeyValuePair<int, int>>();
         HashSet<KeyValuePair<int, int>> open = new HashSet<KeyValuePair<int, int>>();

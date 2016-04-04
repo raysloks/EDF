@@ -20,6 +20,8 @@ public class TurnManagerScript : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        terrain.Init();
+
         order = new Dictionary<float, List<ClickScript>>();
         new_order = new Dictionary<float, List<ClickScript>>();
 
@@ -34,9 +36,9 @@ public class TurnManagerScript : MonoBehaviour {
     {
         Clear();
 
-        ClickScript cs1 = NewCharacter(new Vector3(0.5f, 0.5f, 0.0f));
+        ClickScript cs1 = NewCharacter(new Vector3(0.5f, -1.5f, 0.0f));
         cs1.player = true;
-        ClickScript cs2 = NewCharacter(new Vector3(-0.5f, 0.5f, 0.0f));
+        ClickScript cs2 = NewCharacter(new Vector3(-0.5f, -1.5f, 0.0f));
         cs2.player = true;
 
         ClickScript cs3 = NewCharacter(new Vector3(0.5f, -0.5f, 0.0f));
@@ -76,6 +78,8 @@ public class TurnManagerScript : MonoBehaviour {
         var go = Instantiate(Resources.Load("Prefabs/Character"), position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f))) as GameObject;
         var cs = go.GetComponent<ClickScript>();
         cs.Init();
+        cs.tm = this;
+        terrain.SetCell(cs.transform.position, false);
         if (add_to_order)
         {
             if (current_turnholder != null)

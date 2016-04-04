@@ -1,8 +1,11 @@
-﻿public class CharacterData
+﻿using System;
+
+[Serializable]
+public class CharacterData
 {
-    string name;
+    public string name;
 
-    int STR, DEX, CON, INT, WIS, CHA;
+    public int STR, DEX, CON, INT, WIS, CHA;
 
-    int armor;
+    public int armor;
 }
