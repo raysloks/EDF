@@ -28,7 +28,7 @@ public class ClickScript : MonoBehaviour {
 
 	public bool player;
 
-    CharacterData stats;
+    public CharacterData stats;
 
     public List<Status> status;
 
@@ -67,19 +67,6 @@ public class ClickScript : MonoBehaviour {
     public DelegateDictionary<OnStatusGainedDelegate> onStatusGained;
     public DelegateDictionary<OnStatusLostDelegate> onStatusLost;
 
-    public static ClickScript getCharacterAt(Vector2 pos)
-    {
-        Ray ray = new Ray(new Vector3(pos.x, pos.y) + new Vector3(0.0f, 0.0f, -1.0f), new Vector3(0.0f, 0.0f, 1.0f));
-        var rh = Physics.RaycastAll(ray);
-        for (int i = 0; i < rh.Length; ++i)
-        {
-            ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
-            if (other != null)
-                return other;
-        }
-        return null;
-    }
-
     public void Init()
     {
         onRoll = new DelegateDictionary<OnRollDelegate>();
@@ -104,6 +91,7 @@ public class ClickScript : MonoBehaviour {
 
         path = new List<Vector2>();
 
+        hp = new HealthScript();
         hp.max = 4;
         hp.current = 4;
     }
@@ -191,7 +179,7 @@ public class ClickScript : MonoBehaviour {
                 empty.Add(nume.Current.Key);
         var nume2 = empty.GetEnumerator();
         while (nume.MoveNext())
-            onHit.Remove(nume2.Current);
+            onRoll.Remove(nume2.Current);
     }
 
     public void OnHit(HitData data)
@@ -260,6 +248,8 @@ public class ClickScript : MonoBehaviour {
                 anim.SetBool("dead", true);
             }
         }
+
+        RecalculateStats();
     }
 
     public void OnTurnEnd(TurnData data)
@@ -320,22 +310,22 @@ public class ClickScript : MonoBehaviour {
                 empty.Add(nume.Current.Key);
         var nume2 = empty.GetEnumerator();
         while (nume.MoveNext())
-            onTurnEnd.Remove(nume2.Current);
+            onRecalculateStats.Remove(nume2.Current);
     }
 
     public List<string> GetTypes()
     {
         TypeData data = new TypeData();
-            List<float> empty = new List<float>();
-            var nume = onGetType.GetEnumerator();
-            while (nume.MoveNext())
-                if (nume.Current.Value != null)
-                    nume.Current.Value(this, data);
-                else
-                    empty.Add(nume.Current.Key);
-            var nume2 = empty.GetEnumerator();
-            while (nume.MoveNext())
-                onHit.Remove(nume2.Current);
+        List<float> empty = new List<float>();
+        var nume = onGetType.GetEnumerator();
+        while (nume.MoveNext())
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, data);
+            else
+                empty.Add(nume.Current.Key);
+        var nume2 = empty.GetEnumerator();
+        while (nume.MoveNext())
+            onGetType.Remove(nume2.Current);
         return data.type;
     }
 
@@ -367,53 +357,50 @@ public class ClickScript : MonoBehaviour {
 	                    if (rh_final >= 0)
 	                    {
 	                        ClickScript other = rh[rh_final].transform.GetComponentInParent<ClickScript>();
-	                        if (other != null && other != this)
+	                        if (other != null && other != this && other.team != team && (transform.position - other.transform.position).magnitude < 1.5f)
 	                        {
-								if (other.team != team)
+		                        if (other.transform.position.x > transform.position.x)
+		                            facing = 1;
+		                        if (other.transform.position.x < transform.position.x)
+		                            facing = -1;
+
+		                        HitData hd = new HitData(this, other);
+		                        hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
+
+		                        RollData attacker = new RollData();
+
+		                        attacker.source = this;
+		                        attacker.target = other;
+		                        attacker.type.Add("attack");
+		                        attacker.type.Add("melee");
+
+		                        RollData defender = new RollData(attacker);
+
+		                        defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), defender.target.stats.armor));
+
+		                        attacker.roll.Add(RandomManager.d6());
+		                        attacker.roll.Add(RandomManager.d6());
+
+		                        OnRoll(attacker);
+		                        other.OnRoll(defender);
+
+		                        int result = attacker.GetBoth();
+
+		                        Debug.Log(result);
+
+		                        if (result>=0)
+		                        {
+		                            other.OnHit(hd);
+		                        }
+								else
 								{
-		                            if (other.transform.position.x > transform.position.x)
-		                                facing = 1;
-		                            if (other.transform.position.x < transform.position.x)
-		                                facing = -1;
-
-		                            HitData hd = new HitData(this, other);
-		                            hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
-
-		                            RollData attacker = new RollData();
-
-		                            attacker.source = this;
-		                            attacker.target = other;
-		                            attacker.type.Add("attack");
-		                            attacker.type.Add("melee");
-
-		                            RollData defender = new RollData(attacker);
-
-		                            defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), 7));
-
-		                            attacker.roll.Add(RandomManager.d6());
-		                            attacker.roll.Add(RandomManager.d6());
-
-		                            OnRoll(attacker);
-		                            other.OnRoll(defender);
-
-		                            int result = attacker.GetBoth();
-
-		                            Debug.Log(result);
-
-		                            if (result>=0)
-		                            {
-		                                other.OnHit(hd);
-		                            }
-									else
-									{
-										Instantiate(Resources.Load("Prefabs/MissMessage"), other.transform.position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f)));
-									}
-
-		                            anim.SetTrigger("attack");
-		                            transition = 0.5f;
-
-		                            my_turn = false;	
+									Instantiate(Resources.Load("Prefabs/MissMessage"), other.transform.position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f)));
 								}
+
+		                        anim.SetTrigger("attack");
+		                        transition = 0.5f;
+
+		                        my_turn = false;
 	                        }
 	                        else
 	                        {
@@ -422,9 +409,13 @@ public class ClickScript : MonoBehaviour {
 	                            ntarget.x = Mathf.Round(ntarget.x - 0.5f) + 0.5f;
 	                            ntarget.y = Mathf.Round(ntarget.y - 0.5f) + 0.5f;
 
-	                            TerrainScript ts = rh[rh_final].transform.GetComponent<TerrainScript>();
-	                            if (ts != null)
-                                    path = ts.GetPath(transform.position, ntarget);
+                                TargetData td = new TargetData();
+                                td.start = transform.position;
+                                td.end = ntarget;
+                                td.searcher = this;
+                                td.use_end = true;
+
+                                path = tm.terrain.GetPath(td);
                                 if (path.Count > 0)
                                     path.RemoveAt(path.Count - 1);
 
@@ -448,16 +439,16 @@ public class ClickScript : MonoBehaviour {
                         target = path[path.Count - 1];
                         path.RemoveAt(path.Count - 1);
                         Debug.Log("Path node consumed " + target.x + " " + target.y);
-                        ClickScript cs_at_target = getCharacterAt(target);
-                        if (cs_at_target != null && cs_at_target != this)
+                        GameObject go_at_target = tm.terrain.GetCell(target);
+                        if (go_at_target != null && go_at_target != gameObject)
                         {
                             target = transform.position;
                             path.Clear();
                         }
                         else
                         {
-                            tm.terrain.SetCell(transform.position, true);
-                            tm.terrain.SetCell(target, false);
+                            tm.terrain.SetCell(transform.position, null);
+                            tm.terrain.SetCell(target, gameObject);
                         }
                     }
                 }

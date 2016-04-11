@@ -36,17 +36,41 @@ public class TurnManagerScript : MonoBehaviour {
     {
         Clear();
 
-        ClickScript cs1 = NewCharacter(new Vector3(0.5f, -1.5f, 0.0f));
-        cs1.player = true;
-        ClickScript cs2 = NewCharacter(new Vector3(-0.5f, -1.5f, 0.0f));
-        cs2.player = true;
+        {
+            ClickScript cs = NewCharacter(new Vector3(0.5f, -1.5f, 0.0f));
+            var bs = new BaseStatsStatus();
+            bs.Attach(cs);
+            cs.status.Add(bs);
+            cs.player = true;
+            cs.RecalculateStats();
+        }
+        {
+            ClickScript cs = NewCharacter(new Vector3(-0.5f, -1.5f, 0.0f));
+            var bs = new BaseStatsStatus();
+            bs.Attach(cs);
+            cs.status.Add(bs);
+            cs.player = true;
+            cs.RecalculateStats();
+        }
 
-        ClickScript cs3 = NewCharacter(new Vector3(0.5f, -0.5f, 0.0f));
-        cs3.player = true;
-        cs3.team = 1;
-        ClickScript cs4 = NewCharacter(new Vector3(-0.5f, -0.5f, 0.0f));
-        cs4.player = true;
-        cs4.team = 1;
+        {
+            ClickScript cs = NewCharacter(new Vector3(0.5f, -2.5f, 0.0f));
+            var bs = new BaseStatsStatus();
+            bs.Attach(cs);
+            cs.status.Add(bs);
+            cs.player = true;
+            cs.team = 1;
+            cs.RecalculateStats();
+        }
+        {
+            ClickScript cs = NewCharacter(new Vector3(-0.5f, -2.5f, 0.0f));
+            var bs = new BaseStatsStatus();
+            bs.Attach(cs);
+            cs.status.Add(bs);
+            cs.player = true;
+            cs.team = 1;
+            cs.RecalculateStats();
+        }
     }
 
     public void Clear()
@@ -79,7 +103,7 @@ public class TurnManagerScript : MonoBehaviour {
         var cs = go.GetComponent<ClickScript>();
         cs.Init();
         cs.tm = this;
-        terrain.SetCell(cs.transform.position, false);
+        terrain.SetCell(cs.transform.position, go);
         if (add_to_order)
         {
             if (current_turnholder != null)

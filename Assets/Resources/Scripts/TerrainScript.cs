@@ -3,31 +3,31 @@ using System.Collections.Generic;
 
 public class TerrainScript : MonoBehaviour {
 
-    List<List<bool>> grid;
+    List<List<GameObject>> grid;
     Vector2 origin, size;
     
 	public void Init () {
         origin = new Vector2(-5.0f, -5.0f);
         size = new Vector2(10.0f, 10.0f);
 
-        grid = new List<List<bool>>();
+        grid = new List<List<GameObject>>();
         for (int x=0;x<size.x;++x)
         {
-            grid.Add(new List<bool>());
+            grid.Add(new List<GameObject>());
             for (int y=0;y<size.y;++y)
             {
-                grid[x].Add(true);
+                grid[x].Add(null);
             }
         }
     }
 
-    public void SetCell(Vector2 position, bool value)
+    public void SetCell(Vector2 position, GameObject value)
     {
         KeyValuePair<int, int> cpos = GetCellPosition(position);
         grid[cpos.Key][cpos.Value] = value;
     }
 
-    public bool GetCell(Vector2 position)
+    public GameObject GetCell(Vector2 position)
     {
         KeyValuePair<int, int> cpos = GetCellPosition(position);
         return grid[cpos.Key][cpos.Value];
@@ -43,10 +43,10 @@ public class TerrainScript : MonoBehaviour {
         return new KeyValuePair<int, int>(Mathf.FloorToInt(position.x), Mathf.FloorToInt(position.y));
     }
 
-    public List<Vector2> GetPath(Vector2 start, Vector2 end)
+    public List<Vector2> GetPath(TargetData td)
     {
-        KeyValuePair<int, int> source = GetCellPosition(start);
-        KeyValuePair<int, int> target = GetCellPosition(end);
+        KeyValuePair<int, int> source = GetCellPosition(td.start);
+        KeyValuePair<int, int> target = GetCellPosition(td.end);
 
         HashSet<KeyValuePair<int, int>> closed = new HashSet<KeyValuePair<int, int>>();
         HashSet<KeyValuePair<int, int>> open = new HashSet<KeyValuePair<int, int>>();
@@ -118,15 +118,24 @@ public class TerrainScript : MonoBehaviour {
             for (int i=0;i<8;++i)
             {
                 KeyValuePair<int, int> next = new KeyValuePair<int, int>(current.Key + nb[i].Key, current.Value + nb[i].Value);
-                if (next.Key >= 0 && next.Key < size.x && next.Value >= 0 && next.Value < size.y && grid[next.Key][next.Value] && !closed.Contains(next))
+                if (next.Key >= 0 && next.Key < size.x && next.Value >= 0 && next.Value < size.y && !closed.Contains(next))
                 {
-                    float gdist = g_score[current.Key][current.Value] + Mathf.Sqrt(nb[i].Key * nb[i].Key + nb[i].Value * nb[i].Value);
-                    open.Add(next);
-                    if (gdist < g_score[next.Key][next.Value])
+                    GameObject go = grid[next.Key][next.Value];
+                    bool can_advance = go == null;
+                    if (go != null)
                     {
-                        path[next.Key][next.Value] = current;
-                        g_score[next.Key][next.Value] = gdist;
-                        f_score[next.Key][next.Value] = gdist + Mathf.Sqrt((target.Key - next.Key) * (target.Key - next.Key) + (target.Value - next.Value) * (target.Value - next.Value));
+                        can_advance |= next.Value == target.Value && next.Key == target.Key;
+                    }
+                    if (can_advance)
+                    {
+                        float gdist = g_score[current.Key][current.Value] + Mathf.Sqrt(nb[i].Key * nb[i].Key + nb[i].Value * nb[i].Value);
+                        open.Add(next);
+                        if (gdist < g_score[next.Key][next.Value])
+                        {
+                            path[next.Key][next.Value] = current;
+                            g_score[next.Key][next.Value] = gdist;
+                            f_score[next.Key][next.Value] = gdist + Mathf.Sqrt((target.Key - next.Key) * (target.Key - next.Key) + (target.Value - next.Value) * (target.Value - next.Value));
+                        }
                     }
                 }
             }

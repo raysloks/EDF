@@ -1,8 +1,5 @@
-﻿using UnityEngine;
-using System.Collections;
-
-public class HealthScript : MonoBehaviour {
-
+﻿public class HealthScript
+{
     public int current, max;
 
     public void Damage(int damage) {

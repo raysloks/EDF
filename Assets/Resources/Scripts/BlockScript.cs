@@ -14,8 +14,8 @@ public class BlockScript : MonoBehaviour {
 	
 	void Update()
     {
-        ts.SetCell(previous, true);
-        ts.SetCell(transform.position, false);
+        ts.SetCell(previous, null);
+        ts.SetCell(transform.position, gameObject);
         previous = transform.position;
 	}
 }

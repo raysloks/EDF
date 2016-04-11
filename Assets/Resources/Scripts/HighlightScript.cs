@@ -72,12 +72,17 @@ public class HighlightScript : MonoBehaviour {
             if (!rend.enabled)
                 pm.Clear();
             else
+            {
                 if (prev_pos != transform.position || rend.enabled && !pe)
                 {
-                    Vector2 s = new Vector2(tm.current_turnholder.transform.position.x, tm.current_turnholder.transform.position.y);
-                    Vector2 e = new Vector2(transform.position.x, transform.position.y);
-                    pm.Construct(tm.terrain.GetPath(s, e), transform.position);
+                    TargetData td = new TargetData();
+                    td.start = new Vector2(tm.current_turnholder.transform.position.x, tm.current_turnholder.transform.position.y);
+                    td.end = new Vector2(transform.position.x, transform.position.y);
+                    td.searcher = tm.current_turnholder;
+                    td.use_end = true;
+                    pm.Construct(tm.terrain.GetPath(td), transform.position);
                 }
+            }
         }
 
         pe = rend.enabled;

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using UnityEngine;
+
 [Serializable]
 public class BaseStatsStatus : Status
 {
@@ -19,6 +21,8 @@ public class BaseStatsStatus : Status
 
     void OnRecalculateStats(ClickScript cs, CharacterData data)
     {
+        if (cs.hp.current > 0)
+            data.armor = 7;
     }
 
     public override string GetDescription()
