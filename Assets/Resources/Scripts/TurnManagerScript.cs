@@ -58,7 +58,7 @@ public class TurnManagerScript : MonoBehaviour {
             var bs = new BaseStatsStatus();
             bs.Attach(cs);
             cs.status.Add(bs);
-            cs.player = true;
+            cs.player = false;
             cs.team = 1;
             cs.RecalculateStats();
         }
@@ -67,7 +67,7 @@ public class TurnManagerScript : MonoBehaviour {
             var bs = new BaseStatsStatus();
             bs.Attach(cs);
             cs.status.Add(bs);
-            cs.player = true;
+            cs.player = false;
             cs.team = 1;
             cs.RecalculateStats();
         }
@@ -149,6 +149,7 @@ public class TurnManagerScript : MonoBehaviour {
         BinaryFormatter bf = new BinaryFormatter();
 
         bf.Serialize(stream, RandomManager.random);
+        bf.Serialize(stream, RandomManager.ai);
 
         bf.Serialize(stream, order.Count);
         var nume = order.GetEnumerator();
@@ -174,6 +175,7 @@ public class TurnManagerScript : MonoBehaviour {
         BinaryFormatter bf = new BinaryFormatter();
 
         RandomManager.random = (System.Random)bf.Deserialize(stream);
+        RandomManager.ai = (System.Random)bf.Deserialize(stream);
 
         order.Clear();
 

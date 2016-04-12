@@ -91,6 +91,7 @@ public class TerrainScript : MonoBehaviour {
         {
             KeyValuePair<int, int> current = new KeyValuePair<int, int>(-1, -1);
             float current_f = float.PositiveInfinity;
+            List<KeyValuePair<int, int>> lowest = new List<KeyValuePair<int, int>>();
             foreach (KeyValuePair<int, int> node in open)
             {
                 float fdist = f_score[node.Key][node.Value];
@@ -98,10 +99,36 @@ public class TerrainScript : MonoBehaviour {
                 {
                     current_f = fdist;
                     current = node;
+                    lowest.Clear();
+                    lowest.Add(node);
+                }
+                else
+                {
+                    if (fdist == current_f)
+                    {
+                        lowest.Add(node);
+                    }
                 }
             }
+            if (!td.consistent)
+            {
+                current = lowest[RandomManager.ai.Next(0, lowest.Count - 1)];
+            }
 
-            if (current.Key == target.Key && current.Value == target.Value)
+            bool finished = false;
+            if (td.use_end)
+                finished = current.Key == target.Key && current.Value == target.Value;
+            else
+            {
+                GameObject go = grid[current.Key][current.Value];
+                if (go != null)
+                {
+                    ClickScript cs = go.GetComponent<ClickScript>();
+                    if (cs != null)
+                        finished = cs.team != td.searcher.team;
+                }
+            }
+            if (finished)
             {
                 List<Vector2> total_path = new List<Vector2>();
                 while (current.Key >= 0)
@@ -124,7 +151,14 @@ public class TerrainScript : MonoBehaviour {
                     bool can_advance = go == null;
                     if (go != null)
                     {
-                        can_advance |= next.Value == target.Value && next.Key == target.Key;
+                        if (td.use_end)
+                            can_advance |= next.Value == target.Value && next.Key == target.Key;
+                        else
+                        {
+                            ClickScript cs = go.GetComponent<ClickScript>();
+                            if (cs != null)
+                                can_advance |= cs.team != td.searcher.team && cs.hp.current > 0;
+                        }
                     }
                     if (can_advance)
                     {

@@ -329,6 +329,50 @@ public class ClickScript : MonoBehaviour {
         return data.type;
     }
 
+    void Attack(ClickScript other)
+    {
+        if (other.transform.position.x > transform.position.x)
+            facing = 1;
+        if (other.transform.position.x < transform.position.x)
+            facing = -1;
+
+        HitData hd = new HitData(this, other);
+        hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
+
+        RollData attacker = new RollData();
+
+        attacker.source = this;
+        attacker.target = other;
+        attacker.type.Add("attack");
+        attacker.type.Add("melee");
+
+        RollData defender = new RollData(attacker);
+
+        defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), defender.target.stats.armor));
+
+        attacker.roll.Add(RandomManager.d6());
+        attacker.roll.Add(RandomManager.d6());
+
+        OnRoll(attacker);
+        other.OnRoll(defender);
+
+        int result = attacker.GetBoth();
+
+        Debug.Log(result);
+
+        if (result >= 0)
+        {
+            other.OnHit(hd);
+        }
+        else
+        {
+            Instantiate(Resources.Load("Prefabs/MissMessage"), other.transform.position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f)));
+        }
+
+        anim.SetTrigger("attack");
+        transition = 0.5f;
+    }
+
     void Update()
     {
         bool stunned = false;
@@ -359,49 +403,8 @@ public class ClickScript : MonoBehaviour {
 	                        ClickScript other = rh[rh_final].transform.GetComponentInParent<ClickScript>();
 	                        if (other != null && other != this && other.team != team && (transform.position - other.transform.position).magnitude < 1.5f)
 	                        {
-		                        if (other.transform.position.x > transform.position.x)
-		                            facing = 1;
-		                        if (other.transform.position.x < transform.position.x)
-		                            facing = -1;
-
-		                        HitData hd = new HitData(this, other);
-		                        hd.damage.Add(new KeyValuePair<List<string>, int>(new List<string>(), 1));
-
-		                        RollData attacker = new RollData();
-
-		                        attacker.source = this;
-		                        attacker.target = other;
-		                        attacker.type.Add("attack");
-		                        attacker.type.Add("melee");
-
-		                        RollData defender = new RollData(attacker);
-
-		                        defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), defender.target.stats.armor));
-
-		                        attacker.roll.Add(RandomManager.d6());
-		                        attacker.roll.Add(RandomManager.d6());
-
-		                        OnRoll(attacker);
-		                        other.OnRoll(defender);
-
-		                        int result = attacker.GetBoth();
-
-		                        Debug.Log(result);
-
-		                        if (result>=0)
-		                        {
-		                            other.OnHit(hd);
-		                        }
-								else
-								{
-									Instantiate(Resources.Load("Prefabs/MissMessage"), other.transform.position, Quaternion.AngleAxis(-45.0f, new Vector3(1.0f, 0.0f, 0.0f)));
-								}
-
-		                        anim.SetTrigger("attack");
-		                        transition = 0.5f;
-
-		                        my_turn = false;
-	                        }
+                                Attack(other);
+                            }
 	                        else
 	                        {
 	                            Vector2 ntarget = rh[rh_final].point;
@@ -418,16 +421,42 @@ public class ClickScript : MonoBehaviour {
                                 path = tm.terrain.GetPath(td);
                                 if (path.Count > 0)
                                     path.RemoveAt(path.Count - 1);
+                            }
 
-	                            my_turn = false;
-	                        }
-	                    }
+                            my_turn = false;
+                        }
 	                }
 				}
 				else
-				{
+                {
+                    TargetData td = new TargetData();
+                    td.start = transform.position;
+                    td.end = td.start;
+                    td.searcher = this;
+                    td.use_end = false;
+                    td.consistent = false;
 
-				}
+                    List<Vector2> npath = tm.terrain.GetPath(td);
+                    if (npath.Count > 0)
+                    {
+                        npath.RemoveAt(npath.Count - 1);
+                        if (npath.Count > 0)
+                        {
+                            var go = tm.terrain.GetCell(npath[0]);
+                            ClickScript other = go.GetComponent<ClickScript>();
+                            if (other != null && other != this && other.team != team && (transform.position - other.transform.position).magnitude < 1.5f)
+                            {
+                                Attack(other);
+                            }
+                            else
+                            {
+                                path = npath;
+                            }
+                        }
+                    }
+
+                    my_turn = false;
+                }
             }
 
             if (path != null)

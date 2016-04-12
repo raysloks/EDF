@@ -46,7 +46,9 @@ public class TraitSelectScript : MonoBehaviour {
             var text = test.GetComponentsInChildren<Text>();
             text[0].text = nume.Current.Key;
             text[1].text = nume.Current.Value.GetDescription();
-            var children = test.GetComponentsInChildren<Transform>();
+            var button = test.GetComponentInChildren<Button>();
+            string key = nume.Current.Key;
+            button.onClick.AddListener(delegate { OnTraitSelected(key); });
             y -= 40.0f;
         }
         ((RectTransform)tsgo.transform).sizeDelta = new Vector2(0.0f, -y - 20.0f);

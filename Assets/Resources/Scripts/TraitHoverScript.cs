@@ -1,13 +1,16 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System;
-using UnityEngine.EventSystems;
 
-public class TraitHoverScript : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IPointerExitHandler {
+public class TraitHoverScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler {
 
     public RectTransform desc;
     Image image;
+    Button button;
+
+    bool hover, selected;
 
     float target_w, target_h;
     float min_w, min_h;
@@ -25,10 +28,22 @@ public class TraitHoverScript : MonoBehaviour, UnityEngine.EventSystems.IPointer
         max_h = 200.0f;
 
         image = desc.GetComponent<Image>();
+        button = GetComponentInChildren<Button>();
     }
 
     void Update()
     {
+        if (hover || selected)
+        {
+            target_w = 300.0f;
+            target_h = 300.0f;
+        }
+        else
+        {
+            target_w = -50.0f;
+            target_h = -50.0f;
+        }
+
         float weight = Mathf.Exp(Mathf.Log(0.01f) * Time.deltaTime);
         desc.sizeDelta = new Vector2(
             Mathf.Min(Mathf.Max(desc.sizeDelta.x * weight + target_w * (1.0f-weight), min_w), max_w),
@@ -39,13 +54,21 @@ public class TraitHoverScript : MonoBehaviour, UnityEngine.EventSystems.IPointer
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        target_w = 300.0f;
-        target_h = 300.0f;
+        hover = true;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        target_w = -50.0f;
-        target_h = -50.0f;
+        hover = false;
+    }
+
+    public void OnSelect(BaseEventData eventData)
+    {
+        selected = true;
+    }
+
+    public void OnDeselect(BaseEventData eventData)
+    {
+        selected = false;
     }
 }
