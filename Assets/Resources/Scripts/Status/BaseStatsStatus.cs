@@ -21,6 +21,7 @@ public class BaseStatsStatus : Status
 
     void OnRecalculateStats(ClickScript cs, CharacterData data)
     {
+        data.name = "Murk";
         if (cs.hp.current > 0)
             data.armor = 7;
     }

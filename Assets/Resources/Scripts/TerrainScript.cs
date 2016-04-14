@@ -43,7 +43,7 @@ public class TerrainScript : MonoBehaviour {
         return new KeyValuePair<int, int>(Mathf.FloorToInt(position.x), Mathf.FloorToInt(position.y));
     }
 
-    public List<Vector2> GetPath(TargetData td)
+    public void GetPath(TargetData td)
     {
         KeyValuePair<int, int> source = GetCellPosition(td.start);
         KeyValuePair<int, int> target = GetCellPosition(td.end);
@@ -110,10 +110,13 @@ public class TerrainScript : MonoBehaviour {
                     }
                 }
             }
-            if (!td.consistent)
+            if (td.random)
             {
-                current = lowest[RandomManager.ai.Next(0, lowest.Count - 1)];
+                current = lowest[RandomManager.ai.Next(lowest.Count)];
             }
+
+            open.Remove(current);
+            closed.Add(current);
 
             bool finished = false;
             if (td.use_end)
@@ -136,11 +139,11 @@ public class TerrainScript : MonoBehaviour {
                     total_path.Add(new Vector2(current.Key + 0.5f, current.Value + 0.5f) + origin);
                     current = path[current.Key][current.Value];
                 }
-                return total_path;
+                td.paths.Add(total_path);
+                if (td.use_end)
+                    return;
+                continue;
             }
-
-            open.Remove(current);
-            closed.Add(current);
 
             for (int i=0;i<8;++i)
             {
@@ -174,8 +177,6 @@ public class TerrainScript : MonoBehaviour {
                 }
             }
         }
-        
-        return new List<Vector2>();
     }
 	
 	// Update is called once per frame

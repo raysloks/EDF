@@ -249,6 +249,11 @@ public class ClickScript : MonoBehaviour {
             }
         }
 
+        if (hp.current <= -10)
+        {
+            tm.Erase(this);
+        }
+
         RecalculateStats();
     }
 
@@ -418,7 +423,8 @@ public class ClickScript : MonoBehaviour {
                                 td.searcher = this;
                                 td.use_end = true;
 
-                                path = tm.terrain.GetPath(td);
+                                tm.terrain.GetPath(td);
+                                path = td.paths[0];
                                 if (path.Count > 0)
                                     path.RemoveAt(path.Count - 1);
                             }
@@ -434,24 +440,38 @@ public class ClickScript : MonoBehaviour {
                     td.end = td.start;
                     td.searcher = this;
                     td.use_end = false;
-                    td.consistent = false;
+                    td.random = true;
 
-                    List<Vector2> npath = tm.terrain.GetPath(td);
-                    if (npath.Count > 0)
+                    List<ClickScript> attacks = new List<ClickScript>();
+                    List<List<Vector2>> moves = new List<List<Vector2>>();
+
+                    tm.terrain.GetPath(td);
+                    foreach (var npath in td.paths)
                     {
-                        npath.RemoveAt(npath.Count - 1);
                         if (npath.Count > 0)
                         {
-                            var go = tm.terrain.GetCell(npath[0]);
-                            ClickScript other = go.GetComponent<ClickScript>();
-                            if (other != null && other != this && other.team != team && (transform.position - other.transform.position).magnitude < 1.5f)
+                            npath.RemoveAt(npath.Count - 1);
+                            if (npath.Count > 0)
                             {
-                                Attack(other);
+                                var go = tm.terrain.GetCell(npath[0]);
+                                ClickScript other = go.GetComponent<ClickScript>();
+                                if (other != null && other != this && other.team != team && (transform.position - other.transform.position).magnitude < 1.5f)
+                                    attacks.Add(other);
+                                else
+                                    moves.Add(npath);
                             }
-                            else
-                            {
-                                path = npath;
-                            }
+                        }
+                    }
+                    
+                    if (attacks.Count > 0)
+                    {
+                        Attack(attacks[RandomManager.ai.Next(attacks.Count)]);
+                    }
+                    else
+                    {
+                        if (moves.Count > 0)
+                        {
+                            path = moves[RandomManager.ai.Next(moves.Count)];
                         }
                     }
 

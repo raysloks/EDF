@@ -37,7 +37,7 @@ public class TurnManagerScript : MonoBehaviour {
         Clear();
 
         {
-            ClickScript cs = NewCharacter(new Vector3(0.5f, -1.5f, 0.0f));
+            ClickScript cs = NewCharacter(new Vector3(0.5f, -4.5f, 0.0f));
             var bs = new BaseStatsStatus();
             bs.Attach(cs);
             cs.status.Add(bs);
@@ -45,7 +45,7 @@ public class TurnManagerScript : MonoBehaviour {
             cs.RecalculateStats();
         }
         {
-            ClickScript cs = NewCharacter(new Vector3(-0.5f, -1.5f, 0.0f));
+            ClickScript cs = NewCharacter(new Vector3(-0.5f, -4.5f, 0.0f));
             var bs = new BaseStatsStatus();
             bs.Attach(cs);
             cs.status.Add(bs);
@@ -54,7 +54,7 @@ public class TurnManagerScript : MonoBehaviour {
         }
 
         {
-            ClickScript cs = NewCharacter(new Vector3(0.5f, -2.5f, 0.0f));
+            ClickScript cs = NewCharacter(new Vector3(0.5f, 4.5f, 0.0f));
             var bs = new BaseStatsStatus();
             bs.Attach(cs);
             cs.status.Add(bs);
@@ -63,7 +63,7 @@ public class TurnManagerScript : MonoBehaviour {
             cs.RecalculateStats();
         }
         {
-            ClickScript cs = NewCharacter(new Vector3(-0.5f, -2.5f, 0.0f));
+            ClickScript cs = NewCharacter(new Vector3(-0.5f, 4.5f, 0.0f));
             var bs = new BaseStatsStatus();
             bs.Attach(cs);
             cs.status.Add(bs);
@@ -71,6 +71,24 @@ public class TurnManagerScript : MonoBehaviour {
             cs.team = 1;
             cs.RecalculateStats();
         }
+    }
+
+    public void Erase(ClickScript cs)
+    {
+        if (current_turnholder == cs)
+            current_turnholder = null;
+
+        var nume = order.GetEnumerator();
+        while (nume.MoveNext())
+            nume.Current.Value.Remove(cs);
+
+        var nume2 = new_order.GetEnumerator();
+        while (nume2.MoveNext())
+            nume2.Current.Value.Remove(cs);
+
+        on_hold.Remove(cs);
+
+        Destroy(cs.gameObject);
     }
 
     public void Clear()

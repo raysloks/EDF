@@ -7,6 +7,7 @@ public class HighlightScript : MonoBehaviour {
 
     public TurnManagerScript tm;
     public PathManagerScript pm;
+    public UnitInfoDisplayScript uid;
 
     bool pe;
 
@@ -19,14 +20,11 @@ public class HighlightScript : MonoBehaviour {
 	void Update () {
         Vector3 prev_pos = transform.position;
 
+        uid.cs = null;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var rh = Physics.RaycastAll(ray);
         rend.enabled = false;
-        bool no_input = true;
-        if (tm.current_turnholder != null)
-            no_input = !tm.current_turnholder.my_turn;
-        no_input |= UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
-        if (!no_input)
+        if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
             rend.material.color = new Color(1.0f, 1.0f, 1.0f);
             int rh_final = -1;
@@ -46,6 +44,9 @@ public class HighlightScript : MonoBehaviour {
             if (rh_final >= 0)
             {
                 ClickScript other = rh[rh_final].transform.GetComponentInParent<ClickScript>();
+                uid.cs = other;
+                if (other != null)
+                    uid.gameObject.SetActive(true);
                 if (other != null && other != tm.current_turnholder)
                 {
                     rend.material.color = new Color(1.0f, 0.0f, 0.0f);
@@ -66,10 +67,13 @@ public class HighlightScript : MonoBehaviour {
                 rend.enabled = true;
             }
         }
-        
+
+        bool ce = !rend.enabled || tm.current_turnholder == null;
+        if (tm.current_turnholder != null)
+            ce |= !tm.current_turnholder.my_turn;
         if (pm != null && tm != null)
         {
-            if (!rend.enabled)
+            if (ce)
                 pm.Clear();
             else
             {
@@ -80,11 +84,17 @@ public class HighlightScript : MonoBehaviour {
                     td.end = new Vector2(transform.position.x, transform.position.y);
                     td.searcher = tm.current_turnholder;
                     td.use_end = true;
-                    pm.Construct(tm.terrain.GetPath(td), transform.position);
+
+                    tm.terrain.GetPath(td);
+
+                    if (td.paths.Count > 0)
+                        pm.Construct(td.paths[0], transform.position);
+                    else
+                        pm.Clear();
                 }
             }
         }
 
-        pe = rend.enabled;
+        pe = ce;
     }
 }
