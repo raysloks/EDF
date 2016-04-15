@@ -9,6 +9,8 @@ public class HighlightScript : MonoBehaviour {
     public PathManagerScript pm;
     public UnitInfoDisplayScript uid;
 
+    ClickScript last_turnholder;
+
     bool pe;
 
 	// Use this for initialization
@@ -19,6 +21,10 @@ public class HighlightScript : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         Vector3 prev_pos = transform.position;
+        
+        if (tm.current_turnholder != null)
+            if (tm.current_turnholder.player)
+                last_turnholder = tm.current_turnholder;
 
         uid.cs = null;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -31,7 +37,7 @@ public class HighlightScript : MonoBehaviour {
             for (int i = 0; i < rh.Length; ++i)
             {
                 ClickScript other = rh[i].transform.GetComponentInParent<ClickScript>();
-                if (other != null && other != tm.current_turnholder)
+                if (other != null)
                 {
                     rh_final = i;
                 }
@@ -47,11 +53,11 @@ public class HighlightScript : MonoBehaviour {
                 uid.cs = other;
                 if (other != null)
                     uid.gameObject.SetActive(true);
-                if (other != null && other != tm.current_turnholder)
+                if (other != null)
                 {
                     rend.material.color = new Color(1.0f, 0.0f, 0.0f);
-                    if (tm.current_turnholder != null)
-					    if (other.team == tm.current_turnholder.team)
+                    if (last_turnholder != null)
+					    if (other.team == last_turnholder.team)
 						    rend.material.color = new Color(0.0f, 1.0f, 0.0f);
                     transform.position = other.transform.position;
                     transform.localScale = rh[rh_final].transform.localScale;

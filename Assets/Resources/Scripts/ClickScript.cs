@@ -178,8 +178,38 @@ public class ClickScript : MonoBehaviour {
             else
                 empty.Add(nume.Current.Key);
         var nume2 = empty.GetEnumerator();
-        while (nume.MoveNext())
+        while (nume2.MoveNext())
             onRoll.Remove(nume2.Current);
+    }
+
+    public void OnRollWith(ClickScript other, RollData data)
+    {
+        List<float> empty = new List<float>();
+        List<float> other_empty = new List<float>();
+        var nume = onRoll.GetEnumerator();
+        var nume2 = other.onRoll.GetEnumerator();
+        nume2.MoveNext();
+        while (nume.MoveNext())
+        {
+            while (nume2.Current.Key < nume.Current.Key)
+            {
+                if (nume2.Current.Value != null)
+                    nume2.Current.Value(other, data.other);
+                else
+                    other_empty.Add(nume2.Current.Key);
+                nume2.MoveNext();
+            }
+            if (nume.Current.Value != null)
+                nume.Current.Value(this, data);
+            else
+                empty.Add(nume.Current.Key);
+        }
+        var nume3 = empty.GetEnumerator();
+        while (nume3.MoveNext())
+            onRoll.Remove(nume3.Current);
+        var nume4 = other_empty.GetEnumerator();
+        while (nume4.MoveNext())
+            other.onRoll.Remove(nume4.Current);
     }
 
     public void OnHit(HitData data)
@@ -193,7 +223,7 @@ public class ClickScript : MonoBehaviour {
                 else
                     empty.Add(nume.Current.Key);
             var nume2 = empty.GetEnumerator();
-            while (nume.MoveNext())
+            while (nume2.MoveNext())
                 onHit.Remove(nume2.Current);
         }
         
@@ -236,7 +266,7 @@ public class ClickScript : MonoBehaviour {
                 else
                     empty.Add(nume.Current.Key);
             var nume2 = empty.GetEnumerator();
-            while (nume.MoveNext())
+            while (nume2.MoveNext())
                 onHealthChanged.Remove(nume2.Current);
         }
 
@@ -267,7 +297,7 @@ public class ClickScript : MonoBehaviour {
             else
                 empty.Add(nume.Current.Key);
         var nume2 = empty.GetEnumerator();
-        while (nume.MoveNext())
+        while (nume2.MoveNext())
             onTurnEnd.Remove(nume2.Current);
     }
 
@@ -281,7 +311,7 @@ public class ClickScript : MonoBehaviour {
             else
                 empty.Add(nume.Current.Key);
         var nume2 = empty.GetEnumerator();
-        while (nume.MoveNext())
+        while (nume2.MoveNext())
             onStatusGained.Remove(nume2.Current);
 
         RecalculateStats();
@@ -297,7 +327,7 @@ public class ClickScript : MonoBehaviour {
             else
                 empty.Add(nume.Current.Key);
         var nume2 = empty.GetEnumerator();
-        while (nume.MoveNext())
+        while (nume2.MoveNext())
             onStatusLost.Remove(nume2.Current);
 
         RecalculateStats();
@@ -314,7 +344,7 @@ public class ClickScript : MonoBehaviour {
             else
                 empty.Add(nume.Current.Key);
         var nume2 = empty.GetEnumerator();
-        while (nume.MoveNext())
+        while (nume2.MoveNext())
             onRecalculateStats.Remove(nume2.Current);
     }
 
@@ -329,7 +359,7 @@ public class ClickScript : MonoBehaviour {
             else
                 empty.Add(nume.Current.Key);
         var nume2 = empty.GetEnumerator();
-        while (nume.MoveNext())
+        while (nume2.MoveNext())
             onGetType.Remove(nume2.Current);
         return data.type;
     }
@@ -358,8 +388,7 @@ public class ClickScript : MonoBehaviour {
         attacker.roll.Add(RandomManager.d6());
         attacker.roll.Add(RandomManager.d6());
 
-        OnRoll(attacker);
-        other.OnRoll(defender);
+        OnRollWith(other, attacker);
 
         int result = attacker.GetBoth();
 

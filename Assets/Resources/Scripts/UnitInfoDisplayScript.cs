@@ -21,7 +21,8 @@ public class UnitInfoDisplayScript : MonoBehaviour {
 	void Update()
     {
         if (tm.current_turnholder != null)
-            last_turnholder = tm.current_turnholder;
+            if (tm.current_turnholder.player)
+                last_turnholder = tm.current_turnholder;
         if (cs != null)
         {
             nameText.text = cs.stats.name;

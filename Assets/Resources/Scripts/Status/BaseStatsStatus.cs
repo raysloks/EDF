@@ -23,7 +23,7 @@ public class BaseStatsStatus : Status
     {
         data.name = "Murk";
         if (cs.hp.current > 0)
-            data.armor = 7;
+            data.armor += 7;
     }
 
     public override string GetDescription()
