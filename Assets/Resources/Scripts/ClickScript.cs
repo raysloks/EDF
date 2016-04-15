@@ -381,20 +381,33 @@ public class ClickScript : MonoBehaviour {
         attacker.type.Add("attack");
         attacker.type.Add("melee");
 
+        attacker.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), attacker.source.stats.STR));
+        attacker.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), attacker.source.stats.DEX));
+
         RollData defender = new RollData(attacker);
 
+        defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), 10));
         defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), defender.target.stats.armor));
+        defender.bonus.Add(new KeyValuePair<List<string>, int>(new List<string>(), defender.target.stats.DEX));
 
         attacker.roll.Add(RandomManager.d6());
         attacker.roll.Add(RandomManager.d6());
 
         OnRollWith(other, attacker);
 
+        int ones = 0;
+        foreach (int roll in attacker.roll)
+            if (roll == 1)
+                ++ones;
+
         int result = attacker.GetBoth();
 
         Debug.Log(result);
 
-        if (result >= 0)
+        if (ones == attacker.roll.Count)
+            Debug.Log("SNAKE EYES!");
+
+        if (result >= 0 || ones == attacker.roll.Count)
         {
             other.OnHit(hd);
         }

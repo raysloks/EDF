@@ -10,6 +10,8 @@ public class TraitSelectScript : MonoBehaviour {
 
     public GameObject tsgo;
 
+    public UnitInfoDisplayScript uid; //maybe remove from here later
+
 	void Start()
     {
         traits = new TraitList();
@@ -58,6 +60,17 @@ public class TraitSelectScript : MonoBehaviour {
     {
         if (tm != null)
         {
+            if (uid.cs != null)
+            {
+                var nume = uid.cs.status.GetEnumerator();
+                float y = 20.0f;
+                while (nume.MoveNext())
+                {
+                    GUI.Label(new Rect(500.0f, y, 100.0f, 20.0f), nume.Current.GetName());
+                    y += 20.0f;
+                }
+            }
+
             if (GUI.Button(new Rect(800.0f, 20.0f, 100.0f, 20.0f), "Save"))
                 tm.save_manager.Save(tm);
             if (GUI.Button(new Rect(800.0f, 60.0f, 100.0f, 20.0f), "Load"))

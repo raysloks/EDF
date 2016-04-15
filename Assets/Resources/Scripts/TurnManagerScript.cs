@@ -18,6 +18,8 @@ public class TurnManagerScript : MonoBehaviour {
 
     public SaveManager save_manager;
 
+    public GuildManagerScript gm;
+
 	// Use this for initialization
 	void Start () {
         terrain.Init();
@@ -73,6 +75,25 @@ public class TurnManagerScript : MonoBehaviour {
         }
     }
 
+    public Dictionary<int, int> GetTeamCount()
+    {
+        Dictionary<int, int> dic = new Dictionary<int, int>();
+
+        var nume = order.GetEnumerator();
+        while (nume.MoveNext())
+        {
+            var nume2 = nume.Current.Value.GetEnumerator();
+            while (nume2.MoveNext())
+                if (nume2.Current.hp.current > 0)
+                    if (dic.ContainsKey(nume2.Current.team))
+                        ++dic[nume2.Current.team];
+                    else
+                        dic.Add(nume2.Current.team, 1);
+        }
+
+        return dic;
+    }
+
     public void Erase(ClickScript cs)
     {
         if (current_turnholder == cs)
@@ -113,6 +134,9 @@ public class TurnManagerScript : MonoBehaviour {
             Destroy(on_hold_nume.Current.gameObject);
         }
         on_hold.Clear();
+
+        gm.victory.SetActive(false);
+        gm.defeat.SetActive(false);
     }
 
     public ClickScript NewCharacter(Vector3 position, bool add_to_order = true)
@@ -217,6 +241,12 @@ public class TurnManagerScript : MonoBehaviour {
 	void Update () {
         if (current_turnholder == null)
         {
+            var teams = GetTeamCount();
+            if (!teams.ContainsKey(0))
+                gm.defeat.SetActive(true);
+            if (!teams.ContainsKey(1))
+                gm.victory.SetActive(true);
+
             var nume = order.GetEnumerator();
             while (nume.MoveNext())
             {
