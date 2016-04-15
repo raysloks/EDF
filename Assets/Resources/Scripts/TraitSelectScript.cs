@@ -77,8 +77,6 @@ public class TraitSelectScript : MonoBehaviour {
                 tm.save_manager.Load(tm);
             if (GUI.Button(new Rect(800.0f, 100.0f, 100.0f, 20.0f), "New Game"))
                 tm.TempNewGame();
-            if (GUI.Button(new Rect(800.0f, 140.0f, 100.0f, 20.0f), "Exit Game") || Input.GetKey("escape"))
-                Application.Quit();
         }
     }
 }
